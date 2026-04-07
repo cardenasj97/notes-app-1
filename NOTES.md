@@ -7,3 +7,5 @@
 - Spawned three parallel workers for auth/org shell, notes/search/versioning, and files/AI/deployment.
 - Integrated the first worker results into the main repo and started an integration pass with lint and build checks.
 - Found integration gaps during review: `/app` layout was still demo-oriented, notes DB reads were incomplete, and API routes were using placeholder header auth instead of session-backed auth.
+- Added user-facing organization file uploads/downloads on `/app` and note-level file + AI summary panels on note detail pages.
+- Verified the final state with `pnpm lint`, `pnpm test`, and `pnpm build`.

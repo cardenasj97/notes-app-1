@@ -10,3 +10,5 @@
 ## Notes
 - Schema ownership stays with the main agent to avoid migration conflicts.
 - Review follow-up tasks were sent back to the same workers after the first integration pass exposed mismatches between their slices.
+- Parallel execution helped on three independent slices, but the main integration risk was still cross-slice drift at the `/app` shell, note data path, and API auth boundary.
+- The final integration and verification pass was handled locally to reconcile overlapping assumptions and get the repo to a clean `lint` + `test` + `build` state.
