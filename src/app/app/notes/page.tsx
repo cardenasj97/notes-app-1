@@ -1,0 +1,74 @@
+import Link from "next/link";
+
+import { NoteList } from "@/components/notes/note-list";
+import { getOrganizationNotes } from "@/server/notes/service";
+import { getAppShellContext } from "@/server/orgs/service";
+
+type NotesPageProps = {
+  searchParams?: Promise<{
+    organizationId?: string;
+    q?: string;
+  }>;
+};
+
+export default async function NotesPage({ searchParams }: NotesPageProps) {
+  const params = (await searchParams) ?? {};
+  const context = await getAppShellContext();
+  const organizationId = params.organizationId ?? context.activeOrganization?.id ?? context.organizations[0]?.id ?? null;
+  const query = params.q ?? "";
+  const organization =
+    context.organizations.find((item) => item.id === organizationId) ?? context.activeOrganization ?? null;
+  const notes = organizationId ? await getOrganizationNotes(organizationId, query) : [];
+
+  return (
+    <div className="space-y-8">
+      <section className="grid gap-4 rounded-[2rem] border border-zinc-200 bg-white p-6 shadow-sm lg:grid-cols-[1fr_auto] lg:items-end">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
+            {organization?.name ?? "Organization"}
+          </p>
+          <h2 className="text-3xl font-semibold tracking-tight">Notes</h2>
+          <p className="max-w-2xl text-sm leading-6 text-zinc-600">
+            Search titles, Markdown bodies, and tags while staying inside org boundaries.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {organizationId ? (
+            <Link
+              href={`/app/notes/new?organizationId=${organizationId}`}
+              className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
+            >
+              New note
+            </Link>
+          ) : null}
+        </div>
+      </section>
+
+      {organizationId ? (
+        <form className="flex flex-wrap gap-3 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <input type="hidden" name="organizationId" value={organizationId} />
+          <input
+            name="q"
+            defaultValue={query}
+            placeholder="Search notes"
+            className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-zinc-950"
+          />
+          <button
+            type="submit"
+            className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+          >
+            Search
+          </button>
+        </form>
+      ) : null}
+
+      {organizationId ? (
+        <NoteList notes={notes} organizationId={organizationId} />
+      ) : (
+        <div className="rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-zinc-500">
+          Create or join an organization to start using notes.
+        </div>
+      )}
+    </div>
+  );
+}

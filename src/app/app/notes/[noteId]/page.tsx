@@ -1,0 +1,101 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { NoteDiffView } from "@/components/notes/note-diff-view";
+import { NoteHistory } from "@/components/notes/note-history";
+import { NoteMarkdown } from "@/components/notes/note-markdown";
+import { deleteNoteAction } from "@/server/notes/actions";
+import { getNoteDetail, getNoteVersionDiff } from "@/server/notes/service";
+
+type NoteDetailPageProps = {
+  params: Promise<{ noteId: string }>;
+  searchParams?: Promise<{
+    from?: string;
+    to?: string;
+  }>;
+};
+
+export default async function NoteDetailPage({ params, searchParams }: NoteDetailPageProps) {
+  const { noteId } = await params;
+  const query = (await searchParams) ?? {};
+  const note = await getNoteDetail(noteId).catch(() => null);
+
+  if (!note) {
+    notFound();
+  }
+
+  const diff =
+    query.from && query.to
+      ? await getNoteVersionDiff(noteId, Number(query.from), Number(query.to))
+      : null;
+
+  const latestVersion = note.versions[note.versions.length - 1];
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-zinc-950 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                {note.visibility}
+              </span>
+              {note.tags.map((tag) => (
+                <span key={tag} className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            <h2 className="text-3xl font-semibold tracking-tight">{note.title}</h2>
+            <p className="text-sm text-zinc-500">
+              {note.authorDisplayName} · version {note.currentVersionNumber} · updated{" "}
+              {new Date(note.updatedAt).toLocaleString()}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/app/notes/${note.id}/edit`}
+              className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            >
+              Edit
+            </Link>
+            <form action={deleteNoteAction}>
+              <input type="hidden" name="noteId" value={note.id} />
+              <button
+                type="submit"
+                className="rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+              >
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">
+            Markdown body
+          </h3>
+          <NoteMarkdown body={note.body} />
+        </div>
+        <NoteHistory noteId={note.id} versions={note.versions.slice().reverse()} />
+      </section>
+
+      {diff ? <NoteDiffView diff={diff} /> : null}
+
+      {latestVersion ? (
+        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">
+            Latest version snapshot
+          </h3>
+          <div className="mt-4 space-y-2 text-sm text-zinc-600">
+            <p>Edited by {latestVersion.editedByDisplayName}</p>
+            <p>Source: {latestVersion.changeSource}</p>
+            <p>Changed fields: {latestVersion.changedFields.join(", ") || "none"}</p>
+          </div>
+        </section>
+      ) : null}
+    </div>
+  );
+}

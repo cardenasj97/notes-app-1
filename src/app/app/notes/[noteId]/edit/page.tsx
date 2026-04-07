@@ -1,0 +1,33 @@
+import { notFound } from "next/navigation";
+
+import { NoteForm } from "@/components/notes/note-form";
+import { updateNoteAction } from "@/server/notes/actions";
+import { getNoteDetail } from "@/server/notes/service";
+
+type NoteEditPageProps = {
+  params: Promise<{ noteId: string }>;
+};
+
+export default async function NoteEditPage({ params }: NoteEditPageProps) {
+  const { noteId } = await params;
+  const note = await getNoteDetail(noteId).catch(() => null);
+
+  if (!note) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">Edit</p>
+        <h2 className="text-3xl font-semibold tracking-tight">{note.title}</h2>
+      </div>
+      <NoteForm
+        organizationId={note.organizationId}
+        action={updateNoteAction}
+        submitLabel="Save note"
+        note={note}
+      />
+    </div>
+  );
+}
