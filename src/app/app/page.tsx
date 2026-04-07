@@ -1,8 +1,16 @@
 import { getAppShellContext } from "@/server/orgs/context";
+import { FilePanel } from "@/components/notes/file-panel";
+import { listOrganizationFiles } from "@/server/files/service";
 
 export default async function AppHome() {
   const context = await getAppShellContext();
   const activeOrg = context.activeOrganization;
+  const orgFiles =
+    activeOrg
+      ? await listOrganizationFiles(activeOrg.id, {
+          userId: context.profile.id,
+        }).catch(() => [])
+      : [];
 
   return (
     <section className="space-y-8">
@@ -51,6 +59,15 @@ export default async function AppHome() {
           </p>
         </article>
       </div>
+
+      {activeOrg ? (
+        <FilePanel
+          title="Organization files"
+          description="Upload shared workspace files that any member of the active organization can access."
+          organizationId={activeOrg.id}
+          files={orgFiles}
+        />
+      ) : null}
     </section>
   );
 }

@@ -14,3 +14,13 @@ export const fileDownloadInputSchema = z.object({
 
 export type FileUploadInput = z.infer<typeof fileUploadInputSchema>;
 export type FileDownloadInput = z.infer<typeof fileDownloadInputSchema>;
+
+export type StoredFileSummary = {
+  id: string;
+  organizationId: string;
+  noteId: string | null;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+};

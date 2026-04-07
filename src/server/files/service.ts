@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 
-import { eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 
 import { getDb, hasDatabaseConfig } from "@/db/client";
@@ -13,9 +13,15 @@ import { recordAuditEvent } from "@/server/audit/service";
 
 import {
   canAccessFile,
+  canReadNote,
   canUploadToOrganization,
 } from "./permissions";
-import { fileDownloadInputSchema, fileUploadInputSchema, type FileUploadInput } from "./types";
+import {
+  fileDownloadInputSchema,
+  fileUploadInputSchema,
+  type FileUploadInput,
+  type StoredFileSummary,
+} from "./types";
 import { buildStorageKey } from "./utils";
 
 type AuthContext = {
@@ -177,4 +183,78 @@ export async function createFileDownloadUrl(input: { fileId: string }, auth: Aut
     storageKey: file.storageKey,
     signedUrl: data.signedUrl,
   };
+}
+
+function mapStoredFile(row: {
+  id: string;
+  organizationId: string;
+  noteId: string | null;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: Date;
+}): StoredFileSummary {
+  return {
+    id: row.id,
+    organizationId: row.organizationId,
+    noteId: row.noteId,
+    originalName: row.originalName,
+    mimeType: row.mimeType,
+    sizeBytes: row.sizeBytes,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function listOrganizationFiles(organizationId: string, auth: AuthContext) {
+  if (!hasDatabaseConfig()) {
+    return [] satisfies StoredFileSummary[];
+  }
+
+  if (!(await canUploadToOrganization(auth.userId, organizationId))) {
+    throw new Error("Unauthorized to list organization files.");
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: files.id,
+      organizationId: files.organizationId,
+      noteId: files.noteId,
+      originalName: files.originalName,
+      mimeType: files.mimeType,
+      sizeBytes: files.sizeBytes,
+      createdAt: files.createdAt,
+    })
+    .from(files)
+    .where(and(eq(files.organizationId, organizationId), isNull(files.noteId)))
+    .orderBy(desc(files.createdAt));
+
+  return rows.map(mapStoredFile);
+}
+
+export async function listNoteFiles(noteId: string, auth: AuthContext) {
+  if (!hasDatabaseConfig()) {
+    return [] satisfies StoredFileSummary[];
+  }
+
+  if (!(await canReadNote(auth.userId, noteId))) {
+    throw new Error("Unauthorized to list note files.");
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: files.id,
+      organizationId: files.organizationId,
+      noteId: files.noteId,
+      originalName: files.originalName,
+      mimeType: files.mimeType,
+      sizeBytes: files.sizeBytes,
+      createdAt: files.createdAt,
+    })
+    .from(files)
+    .where(eq(files.noteId, noteId))
+    .orderBy(desc(files.createdAt));
+
+  return rows.map(mapStoredFile);
 }

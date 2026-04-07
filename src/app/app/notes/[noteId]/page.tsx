@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AiSummaryPanel } from "@/components/notes/ai-summary-panel";
+import { FilePanel } from "@/components/notes/file-panel";
 import { NoteDiffView } from "@/components/notes/note-diff-view";
 import { NoteHistory } from "@/components/notes/note-history";
 import { NoteMarkdown } from "@/components/notes/note-markdown";
 import { deleteNoteAction } from "@/server/notes/actions";
-import { getNoteDetail, getNoteVersionDiff } from "@/server/notes/service";
+import { listNoteFiles } from "@/server/files/service";
+import { getActiveNotesViewer, getNoteDetail, getNoteVersionDiff } from "@/server/notes/service";
 
 type NoteDetailPageProps = {
   params: Promise<{ noteId: string }>;
@@ -18,6 +21,7 @@ type NoteDetailPageProps = {
 export default async function NoteDetailPage({ params, searchParams }: NoteDetailPageProps) {
   const { noteId } = await params;
   const query = (await searchParams) ?? {};
+  const viewer = await getActiveNotesViewer();
   const note = await getNoteDetail(noteId).catch(() => null);
 
   if (!note) {
@@ -30,6 +34,8 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
       : null;
 
   const latestVersion = note.versions[note.versions.length - 1];
+  const canEdit = viewer.userId === note.authorId;
+  const files = await listNoteFiles(note.id, { userId: viewer.userId }).catch(() => []);
 
   return (
     <div className="space-y-6">
@@ -52,23 +58,25 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
               {new Date(note.updatedAt).toLocaleString()}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/app/notes/${note.id}/edit`}
-              className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-            >
-              Edit
-            </Link>
-            <form action={deleteNoteAction}>
-              <input type="hidden" name="noteId" value={note.id} />
-              <button
-                type="submit"
-                className="rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+          {canEdit ? (
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={`/app/notes/${note.id}/edit`}
+                className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
               >
-                Delete
-              </button>
-            </form>
-          </div>
+                Edit
+              </Link>
+              <form action={deleteNoteAction}>
+                <input type="hidden" name="noteId" value={note.id} />
+                <button
+                  type="submit"
+                  className="rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                >
+                  Delete
+                </button>
+              </form>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -85,17 +93,33 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
       {diff ? <NoteDiffView diff={diff} /> : null}
 
       {latestVersion ? (
-        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">
-            Latest version snapshot
-          </h3>
-          <div className="mt-4 space-y-2 text-sm text-zinc-600">
-            <p>Edited by {latestVersion.editedByDisplayName}</p>
-            <p>Source: {latestVersion.changeSource}</p>
-            <p>Changed fields: {latestVersion.changedFields.join(", ") || "none"}</p>
-          </div>
-        </section>
+        <>
+          <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">
+              Latest version snapshot
+            </h3>
+            <div className="mt-4 space-y-2 text-sm text-zinc-600">
+              <p>Edited by {latestVersion.editedByDisplayName}</p>
+              <p>Source: {latestVersion.changeSource}</p>
+              <p>Changed fields: {latestVersion.changedFields.join(", ") || "none"}</p>
+            </div>
+          </section>
+
+          <AiSummaryPanel
+            noteId={note.id}
+            noteVersionId={latestVersion.id}
+            acceptedSummary={note.acceptedSummary}
+          />
+        </>
       ) : null}
+
+      <FilePanel
+        title="Note files"
+        description="Upload files scoped to this note. Download links are issued only after the server checks your permissions."
+        organizationId={note.organizationId}
+        noteId={note.id}
+        files={files}
+      />
     </div>
   );
 }
