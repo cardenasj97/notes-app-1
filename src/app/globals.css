@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f0e8;
+  --background-muted: #e5dfd1;
+  --panel: rgba(255, 252, 245, 0.82);
+  --panel-strong: rgba(255, 252, 245, 0.94);
+  --foreground: #211f1a;
+  --foreground-muted: #5d564d;
+  --border: rgba(86, 73, 56, 0.14);
+  --accent: #0f766e;
+  --accent-strong: #155e59;
+  --danger: #b42318;
+  --shadow: 0 24px 60px rgba(39, 34, 26, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background-muted: var(--background-muted);
+  --color-panel: var(--panel);
+  --color-panel-strong: var(--panel-strong);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #191713;
+    --background-muted: #23201b;
+    --panel: rgba(34, 30, 24, 0.86);
+    --panel-strong: rgba(28, 24, 19, 0.94);
+    --foreground: #f8f2e8;
+    --foreground-muted: #c0b5a4;
+    --border: rgba(239, 226, 206, 0.12);
+    --accent: #5eead4;
+    --accent-strong: #99f6e4;
+    --danger: #ff6b6b;
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(138, 92, 246, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 22%);
+  font-family: var(--font-sans), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.grain {
+  position: relative;
+}
+
+.grain::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.12'%3E%3Ccircle cx='12' cy='18' r='1'/%3E%3Ccircle cx='44' cy='32' r='1'/%3E%3Ccircle cx='76' cy='10' r='1'/%3E%3Ccircle cx='104' cy='26' r='1'/%3E%3Ccircle cx='18' cy='74' r='1'/%3E%3Ccircle cx='64' cy='58' r='1'/%3E%3Ccircle cx='94' cy='78' r='1'/%3E%3Ccircle cx='128' cy='64' r='1'/%3E%3Ccircle cx='24' cy='118' r='1'/%3E%3Ccircle cx='58' cy='102' r='1'/%3E%3Ccircle cx='88' cy='120' r='1'/%3E%3Ccircle cx='120' cy='110' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.prose-markdown :where(h1, h2, h3, h4) {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.prose-markdown :where(h1) {
+  font-size: 1.75rem;
+}
+
+.prose-markdown :where(h2) {
+  font-size: 1.4rem;
+}
+
+.prose-markdown :where(p, ul, ol, blockquote) {
+  color: var(--foreground);
+}
+
+.prose-markdown :where(code) {
+  font-family: var(--font-mono), monospace;
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel-strong));
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.prose-markdown :where(pre) {
+  overflow-x: auto;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--foreground) 6%, var(--panel-strong));
+  border: 1px solid var(--border);
+}
+
+.prose-markdown :where(ul, ol) {
+  padding-left: 1.3rem;
+}
+
+.prose-markdown :where(blockquote) {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--foreground-muted);
+}
+
+.prose-markdown > * + * {
+  margin-top: 0.8rem;
 }
