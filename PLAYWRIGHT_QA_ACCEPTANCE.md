@@ -1,10 +1,8 @@
 # Playwright QA Acceptance Checklist
 
-This document is the executable QA spec for browser-driven manual testing of `notes-app-1`.
+This document is the executable QA spec for browser-driven manual testing of this app.
 
-It is derived from:
-- `/Users/juancardenas/Documents/Obsidian Vault/contrario/second test/requirements.md`
-- `/Users/juancardenas/Documents/Obsidian Vault/contrario/second test/multi-tenant-notes-app/00-intake.md`
+This checklist is derived from the original take-home requirements and intake artifacts used to define the app.
 
 Use it as the acceptance gate before calling the app complete.
 
@@ -25,13 +23,14 @@ This checklist is intentionally strict. Any unauthorized read or write is a bloc
 ## Preconditions
 
 Run QA against either:
-- local app: `http://localhost:3000`
+- local dev URL: `BASE_URL`
 - Railway deployment URL
+
+Assume the working agent starts in the repository root.
 
 Required local setup:
 
 ```bash
-cd "/Users/juancardenas/Documents/source-code/playground/contrario/notes-app-1"
 pnpm db:push
 pnpm db:seed
 pnpm dev
@@ -448,7 +447,6 @@ Expected result:
 Optional local helper to fetch user UUIDs:
 
 ```bash
-cd "/Users/juancardenas/Documents/source-code/playground/contrario/notes-app-1"
 node --env-file-if-exists=.env.local --input-type=module -e "import postgres from 'postgres'; const sql = postgres(process.env.DATABASE_URL); const rows = await sql\`select id, email, display_name from profiles order by email\`; console.table(rows); await sql.end();"
 ```
 
