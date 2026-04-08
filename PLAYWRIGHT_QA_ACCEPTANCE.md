@@ -60,12 +60,19 @@ Execution guidance for browser agents:
 Useful visible labels in the UI:
 - `Sign in`
 - `Sign out`
+- `Create account`
+- `Creating...`
 - `Workspace`
 - `Notes`
 - `Open notes`
 - `Create note`
 - `New note`
 - `Search notes`
+- `Searching…`
+- `Load more`
+- `Loading…`
+- `Saving...`
+- `← Back`
 - `Edit`
 - `Delete`
 - `Compare with previous`
@@ -147,17 +154,18 @@ Shared search phrases that appear across orgs:
 
 | Requirement | Covered by suites |
 |---|---|
-| Sign-in, create org, switch org, tenant-safe auth | 1, 2, 3 |
-| Notes CRUD, tagging, visibility, selective sharing | 4, 5 |
-| Versioning, actor/timestamp/change details, diffs | 6 |
-| Search over title/body/tags with permission safety and scale | 7 |
-| File upload/download permissions | 8 |
-| AI structured summary, selective acceptance, permission safety | 9 |
-| Logging | 10 |
-| Docker / Railway smoke | 11 |
-| Seed-data usefulness and deliverables completeness | 12 |
+| Sign-in, sign-up field preservation, create org, switch org, tenant-safe auth | 1, 2, 3 |
+| Notes CRUD, tagging, validation, visibility, selective sharing, form behavior | 4, 5 |
+| Versioning, actor/timestamp/change details, diffs, active version highlighting | 6 |
+| Search over title/body/tags with permission safety, debounce, URL sync, and scale | 7 |
+| Cursor-based pagination, load more, pagination with search | 8 |
+| File upload/download permissions | 9 |
+| AI structured summary, selective acceptance, draft cleanup, permission safety | 10 |
+| Logging | 11 |
+| Docker / Railway smoke | 12 |
+| Seed-data usefulness and deliverables completeness | 13 |
 
-## Suite 1: Smoke, Sign-In, Sign-Out
+## Suite 1: Smoke, Sign-In, Sign-Up, Sign-Out
 
 Steps:
 1. Open `/auth/sign-in`.
@@ -169,16 +177,29 @@ Steps:
 7. Use `Sign out`.
 8. Confirm redirect back to `/auth/sign-in`.
 
+### 1B. Sign-up field preservation
+
+Steps:
+1. Open `/auth/sign-up`.
+2. Fill in `Display name` and `Email` with test values, leave `Password` empty or invalid.
+3. Submit the form.
+4. Confirm validation errors appear.
+5. Confirm `Display name` and `Email` fields still contain the previously entered values (not cleared).
+6. Confirm `Password` field is empty (security — passwords should not be preserved).
+7. Fix the password and submit again to confirm the flow completes.
+
 Pass criteria:
 - No console error, 500 page, or redirect loop
 - Authenticated users land inside the app shell
 - Sign-out fully clears session access
+- Sign-up preserves display name and email on validation failure
 
 Blockers:
 - Cannot sign in with seeded credentials
 - `/app` returns an error after sign-in
+- Sign-up drops entered field values on validation error
 
-## Suite 2: Navigation and Discoverability
+## Suite 2: Navigation, Discoverability, and Loading States
 
 Steps:
 1. Sign in as Avery.
@@ -186,16 +207,22 @@ Steps:
 3. Confirm sidebar navigation contains `Workspace` and `Notes`.
 4. Confirm `/app` home shows `Open notes` and `Create note` when an active org exists.
 5. Click `Notes` and confirm landing on `/app/notes`.
-6. Return to `Workspace` and confirm exact `/app` route.
-7. Visit `/app/notes/new` and `/app/notes/<noteId>` for any accessible note, then confirm `Notes` remains visually active.
+6. Confirm a loading skeleton appears briefly before the notes list renders (animated pulse placeholders for cards, search bar, and header).
+7. Return to `Workspace` and confirm exact `/app` route.
+8. Visit `/app/notes/new` and confirm a loading skeleton appears for the note form (animated pulse placeholders for title, body, tags, visibility, and submit button).
+9. Visit `/app/notes/<noteId>` for any accessible note and confirm a loading skeleton appears for the note detail (animated pulse placeholders for header, body, and sidebar panels).
+10. Confirm `Notes` remains visually active in the sidebar on all `/app/notes*` routes.
 
 Pass criteria:
 - Notes are discoverable from the main authenticated flow
 - Active navigation state is correct on `/app` and `/app/notes*`
+- Loading skeletons appear during route transitions for notes list, note detail, and new note form
+- Skeletons match the general layout of the final content
 
 Blockers:
 - Notes route exists but is not reachable from the shell
 - `/app` hides the notes workflow completely
+- Pages show a blank white screen or spinner instead of skeleton placeholders
 
 ## Suite 3: Organization Creation and Switching
 
@@ -223,35 +250,77 @@ Blockers:
 - Cross-org access from the switcher
 - Active org state is stale after switching
 
-## Suite 4: Notes CRUD, Tagging, and Visibility
+## Suite 4: Notes CRUD, Tagging, Visibility, and Form Behavior
 
 Use a new org or a new note title prefix like `QA <timestamp>` so destructive tests do not damage seeded baselines.
+
+### 4A. Standard CRUD
 
 Steps:
 1. As Avery in QA org or Northwind, create a new org-visible note using:
    - Title
-   - Markdown body
+   - Markdown body (use headings, bold, lists, code blocks to verify rendering)
    - Tags
    - Visibility = `org`
 2. Confirm the note appears in the notes list.
-3. Open it and confirm rendered Markdown body is visible.
-4. Click `Edit`, change:
+3. Open it and confirm rendered Markdown body is visible with proper typographic styling (headings, lists, code blocks styled via prose classes, not raw Markdown text).
+4. Click `Edit`, confirm a `← Back` link is visible at the top of the edit page.
+5. Change:
    - title
    - body
    - tags
-5. Save the note and confirm the changes persist.
-6. Create a second note with visibility `private`.
-7. Delete one created note using `Delete`.
-8. Confirm the deleted note disappears from the list and direct URL no longer behaves like a valid accessible note.
+6. Save the note and confirm the changes persist.
+7. Create a second note with visibility `private`.
+8. Delete one created note using `Delete`.
+9. Confirm the deleted note disappears from the list and direct URL no longer behaves like a valid accessible note.
+
+### 4B. Submit button pending state
+
+Steps:
+1. Create or edit a note.
+2. Click the submit button.
+3. Confirm the button text changes to `Saving...` and the button becomes visually disabled (reduced opacity, `cursor-not-allowed`).
+4. Confirm the button re-enables after the save completes.
+5. Attempt a rapid double-click on the submit button and confirm only one save occurs (no duplicate notes created).
+
+### 4C. Tags validation
+
+Steps:
+1. Create or edit a note and enter more than 10 comma-separated tags (e.g., `a,b,c,d,e,f,g,h,i,j,k`).
+2. Submit and confirm a validation error: `A note can have at most 10 tags.`
+3. Enter a single tag longer than 30 characters.
+4. Submit and confirm a validation error: `Each tag can be at most 30 characters.`
+5. Enter a tags string longer than 500 characters total.
+6. Confirm the input field enforces a `maxlength` of 500 (browser prevents typing beyond 500 chars) and/or the server returns `Tags input is too long.`
+7. Enter exactly 10 valid short tags, submit, and confirm the note saves successfully.
+
+### 4D. Note card display
+
+Steps:
+1. Open `/app/notes` and inspect a note card in the list.
+2. Confirm each card shows:
+   - Visibility badge (`private`, `org`, or `shared`) with appropriate color styling
+   - Version number (e.g., `v1`, `v3`)
+   - Note title
+   - Body preview (truncated to 3 lines)
+   - Tags as `#tag` pills
+   - Author display name, share count, and org identifier
 
 Pass criteria:
 - Create, read, update, and delete all work
 - Tags persist across edit
 - Visibility value persists
+- Markdown body renders with typographic styling, not raw Markdown
+- Submit button shows pending state and prevents double-submission
+- Tags validation rejects >10 tags, >30-char tags, and >500-char total
+- Note cards display all expected metadata
+- Back link on edit page navigates to note detail
 
 Blockers:
 - Any CRUD action fails for the author
 - Deleted notes remain openly accessible
+- Tags validation is missing or allows invalid input through
+- Double-submit creates duplicate notes
 
 ## Suite 5: Permission Boundaries and Selective Sharing
 
@@ -325,8 +394,9 @@ Steps:
    - changed fields
 4. Click `Compare with previous`.
 5. Confirm a diff view appears.
-6. For a newly created note, edit it at least twice and confirm version count increments.
-7. Confirm the `Latest version snapshot` section shows:
+6. Confirm the version history panel highlights the two versions being compared (active `from` and `to` versions are visually distinguished from inactive versions).
+7. For a newly created note, edit it at least twice and confirm version count increments.
+8. Confirm the `Latest version snapshot` section shows:
    - edited by
    - source
    - changed fields
@@ -335,14 +405,18 @@ Pass criteria:
 - Version history is visible and understandable
 - Diff page loads and compares correct versions
 - Actor, timestamp, and change details are visible
+- Compared versions are visually highlighted in the version history list
 
 Blockers:
 - No diff available between versions
 - Missing actor/timestamp/change metadata
+- Diff view does not indicate which versions are being compared
 
-## Suite 7: Search and Search Isolation
+## Suite 7: Search, Client-Side Behavior, and Search Isolation
 
-Use `/app/notes` with the visible `Search notes` field.
+Use `/app/notes` with the visible `Search notes` input field.
+
+Search is client-side with a 300ms debounce. Typing updates the URL `?q=` parameter and fetches results from `/api/notes` without a full page reload.
 
 ### 7A. Title, body, and tag coverage
 
@@ -353,8 +427,27 @@ Steps:
 
 Pass criteria:
 - Relevant notes appear for title, body, and tag matches
+- Both full-text and substring-style matches return results
 
-### 7B. Org isolation
+### 7B. Debounced search UX
+
+Steps:
+1. Focus the `Search notes` input and type a query slowly (one character at a time with pauses).
+2. Confirm a `Searching…` indicator appears while results are loading.
+3. Confirm the notes list shows a skeleton placeholder during the search.
+4. Confirm results update in-place without a full page reload.
+5. Confirm the browser URL updates to include `?q=<query>` after results arrive.
+6. Clear the search field entirely.
+7. Confirm results reset to the default unfiltered list and the `?q=` parameter is removed from the URL.
+
+### 7C. Rapid typing and abort
+
+Steps:
+1. Type a query rapidly (e.g., `migration plan`) in a single burst.
+2. Confirm only the final debounced query produces visible results (intermediate requests are aborted).
+3. Confirm no error flash or stale partial results appear during rapid typing.
+
+### 7D. Org isolation
 
 Steps:
 1. As Avery, search `migration plan` in Northwind.
@@ -366,7 +459,7 @@ Pass criteria:
 - Same query yields different org-scoped result sets
 - No card from another org leaks into the current org view
 
-### 7C. Visibility-aware search
+### 7E. Visibility-aware search
 
 Steps:
 1. As Avery, search exact `Northwind Research migration plan 1` and confirm it appears.
@@ -378,7 +471,7 @@ Steps:
 Pass criteria:
 - Search respects private/shared visibility exactly like direct access
 
-### 7D. Scale sanity
+### 7F. Scale sanity
 
 Steps:
 1. Search common overlapping terms:
@@ -390,13 +483,67 @@ Steps:
 Pass criteria:
 - No crash, timeout, or server error at seeded volume
 
+### 7G. Search result freshness after navigation
+
+Steps:
+1. Search for a term that returns results.
+2. Click on a note to open it.
+3. Navigate back to `/app/notes`.
+4. Confirm the search field retains the previous query (from the `?q=` URL parameter).
+5. Confirm the displayed results match that query, not the default unfiltered list.
+
 Blockers:
 - Search returns unauthorized notes
 - Search crashes or leaks cross-org data
+- Debounced search shows stale results from a prior server render instead of the latest client fetch
+- URL does not sync with the current search state
 
-## Suite 8: Files and Download Permissions
+## Suite 8: Pagination and Load More
 
-### 8A. Org-level files
+The notes feed uses cursor-based pagination with 24 items per page.
+
+### 8A. Basic pagination
+
+Steps:
+1. Sign in as Avery and switch to an org with more than 24 notes (the seed creates ~10k notes across orgs).
+2. Open `/app/notes` with no search query.
+3. Confirm the first page shows up to 24 note cards.
+4. Confirm a `Load more` button is visible below the note cards.
+5. Click `Load more`.
+6. Confirm the button text changes to `Loading…` and the button becomes disabled while fetching.
+7. Confirm additional note cards are appended below the existing ones (not replacing them).
+8. Confirm the `Load more` button reappears if more pages remain, or disappears if all notes are loaded.
+
+### 8B. Pagination with active search
+
+Steps:
+1. Enter a search query that matches more than 24 notes.
+2. Confirm the `Load more` button appears below the search results.
+3. Click `Load more` and confirm additional matching results are appended.
+4. Clear the search and confirm the view resets to the first page of unfiltered notes.
+
+### 8C. Pagination error handling
+
+Steps:
+1. If possible (e.g., by disconnecting the network briefly), trigger a `Load more` failure.
+2. Confirm an error message appears in a rose-colored banner.
+3. Confirm the previously loaded notes remain visible (not cleared).
+
+Pass criteria:
+- First page shows up to 24 notes
+- Load more appends results without replacing existing cards
+- Loading state is visible during fetch
+- Pagination works correctly with and without an active search query
+- Error state preserves previously loaded data
+
+Blockers:
+- Load more replaces existing results instead of appending
+- Cursor-based pagination returns duplicate or missing notes
+- Load more button never appears despite more notes existing
+
+## Suite 9: Files and Download Permissions
+
+### 9A. Org-level files
 
 Steps:
 1. On `/app`, in Northwind, confirm `Organization files` shows an existing seed file.
@@ -407,7 +554,7 @@ Steps:
 Pass criteria:
 - Org file is visible only to org members
 
-### 8B. Note-level files
+### 9B. Note-level files
 
 Steps:
 1. As Avery, open `Northwind Research migration plan 1`.
@@ -419,7 +566,7 @@ Pass criteria:
 - Private note file follows private note visibility
 - Org note file follows org note visibility
 
-### 8C. Upload flow
+### 9C. Upload flow
 
 Steps:
 1. Upload an org file from `/app`.
@@ -431,7 +578,7 @@ Pass criteria:
 - File list refreshes
 - Authorized download works
 
-### 8D. Shared-note file inheritance
+### 9D. Shared-note file inheritance
 
 Required for full AC sign-off.
 
@@ -454,9 +601,9 @@ Blockers:
 - Unauthorized file download succeeds
 - Upload bypasses org/note boundaries
 
-## Suite 9: AI Summary and AI Permission Safety
+## Suite 10: AI Summary and AI Permission Safety
 
-### 9A. Generate summary
+### 10A. Generate summary
 
 Steps:
 1. Open any accessible note detail page.
@@ -471,7 +618,7 @@ Pass criteria:
 - Summary generates without crashing
 - The result shape is structured
 
-### 9B. Selective acceptance
+### 10B. Selective acceptance and draft cleanup
 
 Steps:
 1. Generate a summary.
@@ -480,12 +627,14 @@ Steps:
 4. Confirm note page refreshes.
 5. Confirm version count increments.
 6. Confirm latest version snapshot shows `ai_summary_accept` as the source.
+7. Confirm the AI summary draft panel is cleared after acceptance — no stale draft UI remains visible, and the `Generate summary` button is available again for a fresh generation.
 
 Pass criteria:
 - Accepting selected sections creates a new version
 - Unchecked sections are not applied as accepted content
+- Draft state is fully cleared after acceptance (no leftover draft sections or checkboxes)
 
-### 9C. Stale draft rejection
+### 10C. Stale draft rejection
 
 Steps:
 1. Open the same note in two tabs.
@@ -497,7 +646,7 @@ Pass criteria:
 - Acceptance fails with a stale-version style error
 - The stale AI draft does not overwrite the newer note version
 
-### 9D. AI permission boundaries
+### 10D. AI permission boundaries
 
 Steps:
 1. As a user who can read a shared note but does not own it, open that note.
@@ -511,8 +660,9 @@ Expected safety rules:
 Blockers:
 - Unauthorized user can mutate a note through AI acceptance
 - AI exposes content from inaccessible notes
+- AI draft panel remains visible after acceptance, allowing accidental re-acceptance
 
-## Suite 10: Logging and Operational Visibility
+## Suite 11: Logging and Operational Visibility
 
 This suite is not browser-only. Keep local server logs or Railway logs open while running the prior suites.
 
@@ -532,7 +682,7 @@ Blockers:
 - Important flows are silent in logs
 - Permission denials leave no operational trace
 
-## Suite 11: Deployment Smoke
+## Suite 12: Deployment Smoke
 
 Run against Railway if a deployed URL is available.
 
@@ -554,7 +704,7 @@ If Railway is not available yet:
 - use `pnpm build`
 - optionally use `pnpm start` for a local production smoke pass
 
-## Suite 12: Non-Browser Completeness Checks
+## Suite 13: Non-Browser Completeness Checks
 
 These are required by the take-home but are outside Playwright-only coverage.
 
@@ -582,11 +732,18 @@ Treat these as release blockers:
 - file upload or download bypassing scoped access
 - missing notes discoverability from `/app`
 - deployment smoke failure
+- tags validation bypass allowing unbounded or oversized tags
+- double-submit creating duplicate notes
+- pagination returning duplicate or missing notes
+- AI draft panel not clearing after acceptance (risk of accidental re-acceptance)
+- debounced search showing stale server-rendered results instead of client-fetched results
 
 Treat these as high priority but not always hard blockers:
 - missing or weak operational logs
 - confusing UX that still preserves correctness
 - lack of browser-only visibility into a flow that can be verified by companion shell checks
+- loading skeletons missing or mismatched with final content layout
+- sign-up field values not preserved on validation error
 
 ## Exit Criteria
 

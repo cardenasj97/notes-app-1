@@ -6,7 +6,11 @@ import { SignInForm } from "@/components/auth/sign-in-form";
 import { getCurrentSupabaseUser } from "@/server/auth/session";
 import { getMissingCoreConfig } from "@/lib/env";
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}) {
   const user = await getCurrentSupabaseUser();
 
   if (user) {
@@ -14,6 +18,8 @@ export default async function SignInPage() {
   }
 
   const missing = getMissingCoreConfig();
+  const params = await searchParams;
+  const errorMsg = params.error ?? null;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] px-4 py-10 text-slate-100">
@@ -48,6 +54,11 @@ export default async function SignInPage() {
             title="Welcome back"
             description="Use your organization account to continue."
           >
+            {errorMsg ? (
+              <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                {errorMsg}
+              </p>
+            ) : null}
             <SignInForm />
           </AuthCard>
         </div>

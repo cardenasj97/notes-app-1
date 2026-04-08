@@ -2,6 +2,7 @@
 
 import "server-only";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -98,6 +99,13 @@ export async function signUpAction(
     };
   }
 
+  const headerStore = await headers();
+  const xProto = headerStore.get("x-forwarded-proto");
+  const host = headerStore.get("host");
+  const origin =
+    headerStore.get("origin") ??
+    (xProto && host ? `${xProto}://${host}` : "http://localhost:3000");
+
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -105,6 +113,7 @@ export async function signUpAction(
       data: {
         display_name: parsed.data.displayName,
       },
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   });
 

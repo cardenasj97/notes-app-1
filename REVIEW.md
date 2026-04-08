@@ -35,6 +35,7 @@
 - The next staged follow-up is even narrower: preserve form state on sign-up failures and keep note browsing/search interaction responsive without adding another round of server-owned search UI.
 - The current follow-up is narrower still: keep the debounced search URL sync without letting the server re-render stomp the already-fetched client results.
 - The current staged patch is another small correctness and handoff pass: document the app more clearly in the README, clear stale accepted AI draft state, and move tag constraints closer to the form boundary so bad note payloads fail earlier and more predictably.
+- The current staged patch adds email confirmation auto-sign-in: a `/auth/callback` route handler that exchanges the Supabase PKCE code for a session, a `/auth/confirmed` success page with auto-redirect, `emailRedirectTo` in `signUpAction`, and an error banner on the sign-in page.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 
