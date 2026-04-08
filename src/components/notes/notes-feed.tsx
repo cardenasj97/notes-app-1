@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { NoteList, NoteListSkeleton } from "@/components/notes/note-list";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { NoteListItem, NoteListPage } from "@/server/notes/types";
 
 type NotesFeedProps = {
@@ -26,6 +27,8 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
   const [error, setError] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(query);
   const abortRef = useRef<AbortController | null>(null);
+  const isMountRef = useRef(true);
+  const debouncedSearch = useDebounce(searchValue, 300);
 
   useEffect(() => {
     setItems(initialItems);
@@ -35,9 +38,6 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
     setError(null);
   }, [initialItems, initialNextCursor, organizationId, query]);
 
-  useEffect(() => {
-    setSearchValue(query);
-  }, [query]);
 
   const search = useCallback(
     async (q: string) => {
@@ -84,10 +84,25 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
     [organizationId, router, searchParams],
   );
 
-  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    search(searchValue);
-  }
+  useEffect(() => {
+    if (isMountRef.current) {
+      isMountRef.current = false;
+      return;
+    }
+
+    if (debouncedSearch === "") {
+      abortRef.current?.abort();
+      setItems(initialItems);
+      setNextCursor(initialNextCursor);
+      setIsSearching(false);
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.delete("q");
+      const qs = nextParams.toString();
+      router.replace(qs ? `?${qs}` : "?", { scroll: false });
+    } else {
+      search(debouncedSearch);
+    }
+  }, [debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadMore() {
     if (!nextCursor || isLoadingMore) {
@@ -127,7 +142,7 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
   return (
     <div className="space-y-4">
       <form
-        onSubmit={handleSearchSubmit}
+        onSubmit={(e) => e.preventDefault()}
         className="flex flex-wrap gap-3 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm"
       >
         <input
@@ -136,13 +151,9 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
           placeholder="Search notes"
           className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-zinc-950"
         />
-        <button
-          type="submit"
-          disabled={isSearching}
-          className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSearching ? "Searching…" : "Search"}
-        </button>
+        {isSearching ? (
+          <span className="flex items-center px-4 py-2.5 text-sm text-zinc-400">Searching…</span>
+        ) : null}
       </form>
 
       {isSearching ? (

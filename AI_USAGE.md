@@ -15,6 +15,7 @@
 - Main agent only: replaced the nested post-commit docs automation with pre-commit/pre-push verification so deliverable docs must already be updated before shipping code.
 - Main agent only: handled the latest notes UX polish locally, including client-side search behavior inside the feed, new-note/detail loading states, shell layout cleanup, and small repo-hygiene config fixes.
 - Main agent only: handled the current follow-up locally too, because it is still a tightly coupled UI/runtime cleanup across note pages, global CSS behavior, file upload controls, and Docker packaging.
+- Main agent only: handled the current staged patch locally because it blends note-feed interaction changes with auth form state handling, which is a small but cross-surface UI correctness pass.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -23,6 +24,7 @@
 - The pagination and docs-enforcement work also stayed local because both changes touched critical repo-wide paths: notes query ordering, API error classification, client feed behavior, hooks, wrapper scripts, and the required project docs.
 - The latest staged polish also stayed local because it sits across the same notes UX path and repo tooling path: feed state, app-shell composition, loading states, `.gitignore`, and Drizzle config.
 - This follow-up also stayed local because it is mostly polish and consistency work, where the integration cost of delegating exceeds the implementation cost.
+- The same is true for the current staged patch: the fastest safe move was one local pass across feed state, form state, and visual polish rather than splitting it into separate agents.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.

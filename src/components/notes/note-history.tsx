@@ -32,7 +32,7 @@ export function NoteHistory({ noteId, versions }: NoteHistoryProps) {
                 {previous ? (
                   <Link
                     href={`/app/notes/${noteId}?from=${previous.versionNumber}&to=${version.versionNumber}`}
-                    className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-800 transition hover:bg-white"
+                    className="rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-950 transition hover:bg-white"
                   >
                     Compare with previous
                   </Link>

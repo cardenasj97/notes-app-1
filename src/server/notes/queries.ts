@@ -66,7 +66,10 @@ export function buildListAccessibleNotesPageQuery(
   { organizationId, userId, search, cursor, limit }: BuildListAccessibleNotesPageQueryInput,
 ) {
   const searchFilter: SQL = search
-    ? sql`to_tsvector('english', ${noteTable.searchDocument}) @@ plainto_tsquery('english', ${search})`
+    ? sql`(
+        to_tsvector('english', ${noteTable.searchDocument}) @@ plainto_tsquery('english', ${search})
+        OR ${noteTable.searchDocument} ILIKE ${'%' + search + '%'}
+      )`
     : sql`true`;
   const visibilityFilter = sql`
     (

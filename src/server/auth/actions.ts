@@ -75,10 +75,16 @@ export async function signUpAction(
     password: formData.get("password"),
   });
 
+  const fieldValues = {
+    displayName: formData.get("displayName") as string,
+    email: formData.get("email") as string,
+  };
+
   if (!parsed.success) {
     return {
       fieldErrors: parsed.error.flatten().fieldErrors,
       message: "Check the highlighted fields.",
+      fieldValues,
     };
   }
 
@@ -88,6 +94,7 @@ export async function signUpAction(
   if (!supabase) {
     return {
       message: "Supabase is not configured yet.",
+      fieldValues,
     };
   }
 
@@ -108,6 +115,7 @@ export async function signUpAction(
     });
     return {
       message: error.message,
+      fieldValues,
     };
   }
 

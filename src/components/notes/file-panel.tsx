@@ -121,7 +121,7 @@ export function FilePanel({ title, description, organizationId, noteId = null, f
         <input
           type="file"
           onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-950 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800"
+          className="min-w-0 flex-1 text-sm text-zinc-600 file:mr-4 file:cursor-pointer file:whitespace-nowrap file:rounded-full file:border-0 file:bg-zinc-950 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800"
         />
         <button
           type="button"

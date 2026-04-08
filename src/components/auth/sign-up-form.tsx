@@ -19,9 +19,16 @@ export function SignUpForm() {
         label="Display name"
         name="displayName"
         type="text"
+        defaultValue={state.fieldValues?.displayName}
         error={state.fieldErrors?.displayName?.[0]}
       />
-      <Field label="Email" name="email" type="email" error={state.fieldErrors?.email?.[0]} />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        defaultValue={state.fieldValues?.email}
+        error={state.fieldErrors?.email?.[0]}
+      />
       <Field
         label="Password"
         name="password"
@@ -43,11 +50,13 @@ function Field({
   label,
   name,
   type,
+  defaultValue,
   error,
 }: Readonly<{
   label: string;
   name: string;
   type: string;
+  defaultValue?: string;
   error?: string;
 }>) {
   return (
@@ -56,6 +65,7 @@ function Field({
       <input
         name={name}
         type={type}
+        defaultValue={defaultValue}
         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
       />
       <span className="min-h-5 text-xs text-rose-300">{error ?? ""}</span>
