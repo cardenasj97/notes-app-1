@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getAppShellContext } from "@/server/orgs/context";
 import { FilePanel } from "@/components/notes/file-panel";
 import { listOrganizationFiles } from "@/server/files/service";
@@ -5,6 +7,8 @@ import { listOrganizationFiles } from "@/server/files/service";
 export default async function AppHome() {
   const context = await getAppShellContext();
   const activeOrg = context.activeOrganization;
+  const notesHref = activeOrg ? `/app/notes?organizationId=${activeOrg.id}` : null;
+  const createNoteHref = activeOrg ? `/app/notes/new?organizationId=${activeOrg.id}` : null;
   const orgFiles =
     activeOrg
       ? await listOrganizationFiles(activeOrg.id, {
@@ -51,12 +55,35 @@ export default async function AppHome() {
 
         <article className="rounded-3xl border border-white/10 bg-white/5 p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Content slot
+            Notes
           </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            This page intentionally stays neutral so future notes routes can reuse the same shell
-            without demo-only UI.
-          </p>
+          {activeOrg ? (
+            <div className="mt-3 space-y-4">
+              <p className="text-sm leading-7 text-slate-300">
+                Jump into the notes workspace for {activeOrg.name} or create a new note directly
+                from the current organization context.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={notesHref!}
+                  className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+                >
+                  Open notes
+                </Link>
+                <Link
+                  href={createNoteHref!}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+                >
+                  Create note
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              Select or create an organization first, then use the notes workspace to create and
+              search notes for that organization.
+            </p>
+          )}
         </article>
       </div>
 

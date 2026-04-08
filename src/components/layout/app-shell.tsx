@@ -6,6 +6,7 @@ import { AddMemberForm } from "./add-member-form";
 import { CreateOrgForm } from "./create-org-form";
 import { MemberList } from "./member-list";
 import { OrgSwitcher } from "./org-switcher";
+import { ShellNav } from "./shell-nav";
 import { SignOutForm } from "./sign-out-form";
 
 export function AppShell({
@@ -16,6 +17,7 @@ export function AppShell({
   children: ReactNode;
 }>) {
   const activeOrg = context.activeOrganization;
+  const notesHref = activeOrg ? `/app/notes?organizationId=${activeOrg.id}` : "/app/notes";
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] text-slate-100">
@@ -37,6 +39,15 @@ export function AppShell({
           </div>
 
           <div className="mt-8 space-y-6">
+            <section className="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Navigation
+                </p>
+                <ShellNav notesHref={notesHref} />
+              </div>
+            </section>
+
             <section className="rounded-3xl border border-white/10 bg-white/5 p-4">
               <OrgSwitcher
                 organizations={context.organizations}
