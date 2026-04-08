@@ -51,3 +51,4 @@
 - Added a branded not-found page for the note detail route so deleted or inaccessible notes render a clear message with a back link instead of the generic Next.js 404.
 - Extracted the delete button on the note detail page into a client component using `useFormStatus` so the button shows a "Deleting…" disabled state while the server action is running.
 - Extended note detail and version diffs so non-authors can still read accepted AI summaries without seeing the authoring panel, and diff output now includes accepted-summary changes alongside body changes.
+- Expanded the Playwright QA acceptance guide so it now covers the newer UX and review surfaces too: delete pending state, branded note not-found handling, member-picker sharing, accepted AI summary display on note detail, summary-diff coverage, and the updated shared-file flow that no longer depends on raw UUID lookup.

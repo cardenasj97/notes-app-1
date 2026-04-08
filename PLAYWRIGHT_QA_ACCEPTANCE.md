@@ -75,6 +75,7 @@ Useful visible labels in the UI:
 - `← Back`
 - `Edit`
 - `Delete`
+- `Deleting…`
 - `Compare with previous`
 - `Generate summary`
 - `Accept selected sections`
@@ -155,12 +156,12 @@ Shared search phrases that appear across orgs:
 | Requirement | Covered by suites |
 |---|---|
 | Sign-in, sign-up field preservation, create org, switch org, tenant-safe auth | 1, 2, 3 |
-| Notes CRUD, tagging, validation, visibility, selective sharing, form behavior | 4, 5 |
+| Notes CRUD, tagging, validation, visibility, selective sharing, form behavior, member picker, delete loading state, not-found page | 4, 5 |
 | Versioning, actor/timestamp/change details, diffs, active version highlighting | 6 |
 | Search over title/body/tags with permission safety, debounce, URL sync, and scale | 7 |
 | Cursor-based pagination, load more, pagination with search | 8 |
 | File upload/download permissions | 9 |
-| AI structured summary, selective acceptance, draft cleanup, permission safety | 10 |
+| AI structured summary, selective acceptance, draft cleanup, permission safety, summary history in note detail, summary diff | 10 |
 | Logging | 11 |
 | Docker / Railway smoke | 12 |
 | Seed-data usefulness and deliverables completeness | 13 |
@@ -272,7 +273,9 @@ Steps:
 6. Save the note and confirm the changes persist.
 7. Create a second note with visibility `private`.
 8. Delete one created note using `Delete`.
-9. Confirm the deleted note disappears from the list and direct URL no longer behaves like a valid accessible note.
+9. Confirm the deleted note disappears from the list.
+10. Open the deleted note's URL directly.
+11. Confirm the not-found page renders with the text `Note not found`, a subtitle mentioning the note may have been deleted or access is denied, and a `Back to notes` link that returns to `/app/notes`.
 
 ### 4B. Submit button pending state
 
@@ -282,6 +285,20 @@ Steps:
 3. Confirm the button text changes to `Saving...` and the button becomes visually disabled (reduced opacity, `cursor-not-allowed`).
 4. Confirm the button re-enables after the save completes.
 5. Attempt a rapid double-click on the submit button and confirm only one save occurs (no duplicate notes created).
+
+### 4C-bis. Delete button loading state
+
+Steps:
+1. Open a note detail page for a note you own.
+2. Click `Delete`.
+3. Confirm the button text changes to `Deleting…` and the button becomes visually disabled while the deletion is in flight.
+4. Confirm the app redirects to `/app/notes` after deletion completes.
+5. Confirm the deleted note no longer appears in the list.
+
+Pass criteria:
+- Delete button shows `Deleting…` during the pending state
+- Button is disabled while pending (no double-delete)
+- Redirect occurs after successful deletion
 
 ### 4C. Tags validation
 
@@ -306,6 +323,19 @@ Steps:
    - Tags as `#tag` pills
    - Author display name, share count, and org identifier
 
+### 4E. Member picker for shared visibility
+
+Steps:
+1. As Avery in Northwind, open `/app/notes/new`.
+2. Confirm the `Share with` section shows a list of org members as checkboxes (not a raw UUID text field).
+3. While visibility is set to `org` or `private`, confirm the checkboxes are disabled and the helper text reads `Set visibility to "shared" to enable sharing.`
+4. Change visibility to `shared`.
+5. Confirm the checkboxes become enabled and the helper text changes to `Select org members to share this note with.`
+6. Check one or more members.
+7. Save the note.
+8. Reopen the note's edit page and confirm the previously checked members are pre-selected.
+9. Uncheck all members, change visibility back to `org`, and save. Confirm no sharing recipients remain.
+
 Pass criteria:
 - Create, read, update, and delete all work
 - Tags persist across edit
@@ -315,12 +345,18 @@ Pass criteria:
 - Tags validation rejects >10 tags, >30-char tags, and >500-char total
 - Note cards display all expected metadata
 - Back link on edit page navigates to note detail
+- Delete button shows `Deleting…` loading state and prevents double-deletion
+- Deleted note URL renders the not-found page with `Note not found` heading and `Back to notes` link
+- Member picker replaces raw UUID input for shared visibility
 
 Blockers:
 - Any CRUD action fails for the author
 - Deleted notes remain openly accessible
 - Tags validation is missing or allows invalid input through
 - Double-submit creates duplicate notes
+- Raw UUID input still shown for note sharing
+- Delete button shows no loading state or allows double-delete
+- Deleted note URL returns a blank page or 500 instead of the not-found page
 
 ## Suite 5: Permission Boundaries and Selective Sharing
 
@@ -582,20 +618,20 @@ Pass criteria:
 
 Required for full AC sign-off.
 
-Because the share form currently expects raw user UUIDs, use one of these approaches:
-- preferred: fetch profile UUIDs from the database and create a new shared note with a note file
-- fallback: if browser-only, mark this subtest as blocked by QA tooling limitations and do not call file visibility fully signed off
+Use the member picker in the note form (Suite 4E) to create a shared note with a note file. The picker shows org members by display name, so no UUID lookup is required.
+
+Steps:
+1. As Avery in Northwind, create a new note with visibility `shared`, select Mina via the member picker, and save.
+2. Upload a file to that note's detail page.
+3. Copy the note URL.
+4. As Mina, open the URL and confirm the note and its file are accessible and downloadable.
+5. As Leo, open the same URL and confirm access is denied.
+6. As Nadia (not a Northwind member), open the same URL and confirm access is denied.
 
 Expected result:
 - author and shared recipient can access the note file
 - non-recipient org member cannot
 - non-member cannot
-
-Optional local helper to fetch user UUIDs:
-
-```bash
-node --env-file-if-exists=.env.local --input-type=module -e "import postgres from 'postgres'; const sql = postgres(process.env.DATABASE_URL); const rows = await sql\`select id, email, display_name from profiles order by email\`; console.table(rows); await sql.end();"
-```
 
 Blockers:
 - Unauthorized file download succeeds
@@ -661,6 +697,39 @@ Blockers:
 - Unauthorized user can mutate a note through AI acceptance
 - AI exposes content from inaccessible notes
 - AI draft panel remains visible after acceptance, allowing accidental re-acceptance
+
+### 10E. Accepted AI summary shown in note detail
+
+Steps:
+1. Open a note that has had an AI summary accepted (e.g., seeded `Northwind Research migration plan 1` as Avery, or accept a new summary on any note you own).
+2. Scroll to the note detail page below the version history.
+3. Confirm an `AI summary` section is visible with a `Note summary` heading.
+4. Confirm the section displays all four panels: `Overview`, `Key points`, `Action items`, and `Open questions`.
+5. Confirm each panel shows the accepted content (not "No content." for all fields unless the note genuinely has none).
+
+Pass criteria:
+- Accepted AI summary is shown persistently in the note detail page
+- All four summary panels are rendered
+- Notes without an accepted summary do not show the AI summary section
+
+### 10F. Summary changes in diff view
+
+Steps:
+1. Open a note that has had an AI summary accepted (creating a version where `summary` is a changed field).
+2. On the note detail page, click `Compare with previous` for the version that accepted the summary.
+3. Confirm the diff view shows a `Body` label above the body diff lines.
+4. Confirm a `Summary changes` section appears below the body diff.
+5. Confirm the `Summary changes` section uses the same diff styling: added lines in green (`emerald`), removed lines in red (`rose`) with strikethrough, unchanged lines in neutral.
+6. Confirm that for a version where only the body changed (no summary change), the `Summary changes` section is not shown.
+
+Pass criteria:
+- Diff view shows `Summary changes` section when a summary was added or modified
+- Summary diff styling is consistent with body diff styling
+- `Summary changes` section is absent when there are no summary changes
+
+Blockers:
+- Accepted AI summary is not shown in the note detail page
+- Diff view never shows a `Summary changes` section even when summary content changed
 
 ## Suite 11: Logging and Operational Visibility
 
@@ -737,6 +806,8 @@ Treat these as release blockers:
 - pagination returning duplicate or missing notes
 - AI draft panel not clearing after acceptance (risk of accidental re-acceptance)
 - debounced search showing stale server-rendered results instead of client-fetched results
+- accepted AI summary not shown in note detail page
+- deleted note URL returns a blank page or 500 instead of the not-found page
 
 Treat these as high priority but not always hard blockers:
 - missing or weak operational logs
@@ -744,6 +815,8 @@ Treat these as high priority but not always hard blockers:
 - lack of browser-only visibility into a flow that can be verified by companion shell checks
 - loading skeletons missing or mismatched with final content layout
 - sign-up field values not preserved on validation error
+- delete button showing no loading state (correctness preserved, but poor UX)
+- summary diff section missing from diff view when summary was changed
 
 ## Exit Criteria
 
