@@ -23,9 +23,11 @@
 - Seed assumed the storage bucket already existed, which creates a fresh-project bootstrap failure exactly when the repo is being evaluated from scratch.
 - The initial notes pagination pass fixed overfetching but introduced a second-page cursor bug because the SQL predicate mixed JS `Date` objects into the Drizzle query path instead of using explicit typed SQL parameters.
 - The original docs automation design was too optimistic: it tried to generate required docs after commit, which is not reliable enough to guarantee those docs stay aligned with every pushed code change.
+- After pagination landed, the notes page still had split ownership of search UX between the server page shell and the client feed, which is a smaller but real consistency issue because paging and search now need to share the same state transitions.
 
 ## Current State
 - The current staged patch addresses three things together: notes list scalability via cursor pagination, the cursor query failure on `Load more`, and a stricter repo workflow that requires deliverable docs to be updated before commit/push.
+- The latest staged follow-up cleans up the notes UX around that pagination work by moving search responsibility into the feed, adding missing loading states, and tightening a couple of repo/runtime defaults.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

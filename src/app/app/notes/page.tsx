@@ -45,24 +45,6 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
       </section>
 
       {organizationId ? (
-        <form className="flex flex-wrap gap-3 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
-          <input type="hidden" name="organizationId" value={organizationId} />
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="Search notes"
-            className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-zinc-950"
-          />
-          <button
-            type="submit"
-            className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-          >
-            Search
-          </button>
-        </form>
-      ) : null}
-
-      {organizationId ? (
         <NotesFeed
           initialItems={notePage?.items ?? []}
           initialNextCursor={notePage?.nextCursor ?? null}

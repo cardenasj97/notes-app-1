@@ -93,6 +93,7 @@ export const notes = pgTable("notes", {
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => [
   index("notes_org_updated_idx").on(table.organizationId, table.updatedAt),
+  index("notes_org_active_updated_idx").on(table.organizationId, table.deletedAt, table.updatedAt),
   index("notes_author_idx").on(table.authorId),
   index("notes_visibility_idx").on(table.visibility),
   index("notes_search_document_idx").using(

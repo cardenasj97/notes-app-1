@@ -22,20 +22,17 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] text-slate-100">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] flex-col lg:flex-row">
-        <aside className="border-b border-white/10 bg-slate-950/60 px-5 py-6 backdrop-blur lg:w-[360px] lg:border-b-0 lg:border-r lg:px-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/80">
-                Notes App 1
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-                Multi-tenant notes
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                Signed in as {context.profile.displayName}
-              </p>
-            </div>
-            <SignOutForm />
+        <aside className="flex flex-col border-b border-white/10 bg-slate-950/60 px-5 py-6 backdrop-blur lg:min-h-screen lg:w-[360px] lg:border-b-0 lg:border-r lg:px-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/80">
+              Notes App 1
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+              Multi-tenant notes
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Signed in as {context.profile.displayName}
+            </p>
           </div>
 
           <div className="mt-8 space-y-6">
@@ -76,6 +73,10 @@ export function AppShell({
                 Create your first organization to start collaborating.
               </section>
             )}
+          </div>
+
+          <div className="mt-auto pt-6">
+            <SignOutForm />
           </div>
         </aside>
 
