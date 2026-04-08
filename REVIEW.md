@@ -41,6 +41,7 @@
 - The current staged patch is a narrower deployment/QA pass: the Docker builder now receives the required public Supabase env values at build time, and the repo includes small text fixtures for repeatable manual file-upload checks.
 - The current staged patch is a final deployment alignment pass: Railway now builds via the repo Dockerfile instead of a separate Nixpacks path, so hosted builds match the container setup that was already reviewed locally.
 - The current staged patch is a tiny browser-runtime fix: client-side Supabase env access now lives in a dedicated helper that uses direct `process.env.NEXT_PUBLIC_*` reads so Next.js can inline the values into the browser bundle.
+- The current staged patch is a small selective-sharing UX correction: note create/edit now receives org members and renders a checkbox picker instead of a raw UUID input, which makes the shipped sharing flow match the intended product behavior.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { NoteForm } from "@/components/notes/note-form";
 import { updateNoteAction } from "@/server/notes/actions";
-import { getNoteDetail } from "@/server/notes/service";
+import { getActiveNotesViewer, getNoteDetail } from "@/server/notes/service";
+import { listOrganizationMembers } from "@/server/orgs/service";
 
 type NoteEditPageProps = {
   params: Promise<{ noteId: string }>;
@@ -11,11 +12,16 @@ type NoteEditPageProps = {
 
 export default async function NoteEditPage({ params }: NoteEditPageProps) {
   const { noteId } = await params;
-  const note = await getNoteDetail(noteId).catch(() => null);
+  const [note, viewer] = await Promise.all([
+    getNoteDetail(noteId).catch(() => null),
+    getActiveNotesViewer(),
+  ]);
 
   if (!note) {
     notFound();
   }
+
+  const members = await listOrganizationMembers(note.organizationId);
 
   return (
     <div className="space-y-6">
@@ -34,6 +40,8 @@ export default async function NoteEditPage({ params }: NoteEditPageProps) {
         action={updateNoteAction}
         submitLabel="Save note"
         note={note}
+        members={members}
+        currentUserId={viewer.userId}
       />
     </div>
   );

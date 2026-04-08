@@ -1,24 +1,40 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { initialNoteFormActionState, type NoteFormActionState } from "@/server/notes/action-state";
 import type { NoteRecord } from "@/server/notes/types";
+
+export type NoteFormMember = {
+  userId: string;
+  email: string;
+  displayName: string;
+};
 
 type NoteFormProps = {
   organizationId: string;
   action: (state: NoteFormActionState, formData: FormData) => Promise<NoteFormActionState>;
   submitLabel: string;
   note?: NoteRecord;
+  members?: NoteFormMember[];
+  currentUserId?: string;
 };
 
-export function NoteForm({ organizationId, action, submitLabel, note }: NoteFormProps) {
+export function NoteForm({ organizationId, action, submitLabel, note, members = [], currentUserId }: NoteFormProps) {
   const [state, formAction, pending] = useActionState<NoteFormActionState, FormData>(
     action,
     initialNoteFormActionState,
   );
 
-  const sharedUserIds = state.fieldValues?.sharedUserIds ?? note?.sharedUsers.map((u) => u.userId).join(", ") ?? "";
+  const [visibility, setVisibility] = useState(state.fieldValues?.visibility ?? note?.visibility ?? "org");
+  const isShared = visibility === "shared";
+
+  const initialSharedIds = state.fieldValues?.sharedUserIds
+    ? state.fieldValues.sharedUserIds.split(",").map((s) => s.trim()).filter(Boolean)
+    : note?.sharedUsers.map((u) => u.userId) ?? [];
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(initialSharedIds);
+
+  const shareableMembers = members.filter((m) => m.userId !== currentUserId);
   const tags = state.fieldValues?.tags ?? note?.tags.join(", ") ?? "";
 
   return (
@@ -71,7 +87,8 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
           <select
             id="visibility"
             name="visibility"
-            defaultValue={state.fieldValues?.visibility ?? note?.visibility ?? "org"}
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
             className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
           >
             <option value="private">private</option>
@@ -99,19 +116,42 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
           ) : null}
         </div>
       </div>
+      <input type="hidden" name="sharedUserIds" value={selectedUserIds.join(",")} />
       <div className="grid gap-2">
-        <label htmlFor="sharedUserIds" className="text-sm font-medium text-zinc-900">
-          Shared user ids
+        <label className={`text-sm font-medium ${isShared ? "text-zinc-900" : "text-zinc-400"}`}>
+          Share with
         </label>
-        <input
-          id="sharedUserIds"
-          name="sharedUserIds"
-          defaultValue={sharedUserIds}
-          placeholder="11111111-1111-1111-1111-111111111111, ..."
-          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
-        />
+        {shareableMembers.length > 0 ? (
+          <div className={`rounded-2xl border border-zinc-300 bg-white px-4 py-3 space-y-2 ${!isShared ? "opacity-60" : ""}`}>
+            {shareableMembers.map((member) => {
+              const checked = selectedUserIds.includes(member.userId);
+              return (
+                <label
+                  key={member.userId}
+                  className={`flex items-center gap-3 text-sm ${isShared ? "cursor-pointer text-zinc-900" : "cursor-not-allowed text-zinc-400"}`}
+                >
+                  <input
+                    type="checkbox"
+                    disabled={!isShared}
+                    checked={checked}
+                    onChange={() => {
+                      setSelectedUserIds((prev) =>
+                        checked ? prev.filter((id) => id !== member.userId) : [...prev, member.userId],
+                      );
+                    }}
+                    className="h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+                  />
+                  <span>{member.displayName}</span>
+                  <span className="text-xs text-zinc-500">{member.email}</span>
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-400">No other members in this organization.</p>
+        )}
         <p className="text-xs text-zinc-500">
-          Optional comma-separated user ids for selective sharing within the org.
+          {isShared ? "Select org members to share this note with." : "Set visibility to \"shared\" to enable sharing."}
         </p>
       </div>
       <div className="flex flex-wrap gap-3">

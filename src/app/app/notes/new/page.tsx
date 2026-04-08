@@ -1,6 +1,7 @@
 import { NoteForm } from "@/components/notes/note-form";
 import { createNoteAction } from "@/server/notes/actions";
 import { getActiveNotesViewer } from "@/server/notes/service";
+import { listOrganizationMembers } from "@/server/orgs/service";
 
 type NewNotePageProps = {
   searchParams?: Promise<{
@@ -13,6 +14,10 @@ export default async function NewNotePage({ searchParams }: NewNotePageProps) {
   const viewer = await getActiveNotesViewer();
   const organizationId = params.organizationId ?? viewer.activeOrganizationId ?? viewer.organizationIds[0] ?? null;
 
+  const members = organizationId
+    ? await listOrganizationMembers(organizationId)
+    : [];
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -22,7 +27,13 @@ export default async function NewNotePage({ searchParams }: NewNotePageProps) {
         <h2 className="text-3xl font-semibold tracking-tight">New note</h2>
       </div>
       {organizationId ? (
-        <NoteForm organizationId={organizationId} action={createNoteAction} submitLabel="Create note" />
+        <NoteForm
+          organizationId={organizationId}
+          action={createNoteAction}
+          submitLabel="Create note"
+          members={members}
+          currentUserId={viewer.userId}
+        />
       ) : (
         <div className="rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-zinc-500">
           Create or join an organization before adding notes.

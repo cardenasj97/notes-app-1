@@ -47,3 +47,4 @@
 - Updated the Docker build to pass `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` through the builder stage so production builds can resolve the required public env at compile time, and added a small `test-files/` fixture set for manual file-upload QA.
 - Switched Railway from the generic Nixpacks builder to the checked-in Dockerfile explicitly so deployment now uses the same container path and build args already hardened in the repo.
 - Added a dedicated client-safe env helper for public Supabase values and moved the browser Supabase client onto it, because the server-side Zod env wrapper prevented Next.js from inlining `NEXT_PUBLIC_*` values correctly in the browser bundle.
+- Replaced the raw `sharedUserIds` text input on note create/edit with an organization-member checkbox picker, wiring member lists into the new/edit pages so selective sharing is now discoverable and no longer depends on users typing UUIDs by hand.
