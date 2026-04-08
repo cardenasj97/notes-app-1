@@ -27,7 +27,7 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">
             {organization?.name ?? "Organization"}
           </p>
-          <h2 className="text-3xl font-semibold tracking-tight">Notes</h2>
+          <h2 className="text-3xl font-semibold tracking-tight text-zinc-950">Notes</h2>
           <p className="max-w-2xl text-sm leading-6 text-zinc-600">
             Search titles, Markdown bodies, and tags while staying inside org boundaries.
           </p>
@@ -36,7 +36,7 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
           {organizationId ? (
             <Link
               href={`/app/notes/new?organizationId=${organizationId}`}
-              className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
+              className="whitespace-nowrap rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
             >
               New note
             </Link>
@@ -51,7 +51,7 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
             name="q"
             defaultValue={query}
             placeholder="Search notes"
-            className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-zinc-950"
+            className="min-w-0 flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-zinc-950"
           />
           <button
             type="submit"

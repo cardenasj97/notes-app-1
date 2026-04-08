@@ -25,3 +25,9 @@
 - Extracted the notes list SQL builder so the empty-search and searched branches can use different `orderBy` behavior without changing the permission filter logic.
 - Added a regression test that inspects generated SQL and explicitly guards against reintroducing `order by 0 desc` in the empty-search branch.
 - Verified the notes query fix with `pnpm lint` and focused Vitest coverage before pushing commit `13e4990`.
+- Reworked `/app/notes` from a full 10k-note server dump to cursor-based pagination with a server-rendered first page, a `Load more` client feed, and a route-level loading skeleton.
+- Added `/api/notes` for incremental page fetches and kept the same org-boundary and visibility filtering in the paginated DB path.
+- Investigated a second-page `Load more` failure and traced it to the cursor SQL branch using JS `Date` objects inside query templates instead of explicit typed SQL casts.
+- Replaced that cursor predicate with typed browse/search cursor helpers and added regression coverage for cursor paging and duplicate-free next-page behavior.
+- Added a notes detail route loading skeleton and a small pass on notes page/detail readability and button wrapping so the UI stays stable while async content loads.
+- Replaced the unreliable post-commit docs generation workflow with staged-doc verification before commit and a pre-push hook that blocks code pushes when `NOTES.md`, `AI_USAGE.md`, `BUGS.md`, and `REVIEW.md` are stale.

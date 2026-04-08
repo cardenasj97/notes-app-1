@@ -4,4 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-bash ./scripts/refresh-deliverable-docs.sh --background
+if git rev-parse --verify HEAD~1 >/dev/null 2>&1 \
+  && ! bash ./scripts/verify-deliverables.sh --range HEAD~1..HEAD >/dev/null 2>&1; then
+  echo "[deliverable-docs] reminder: update NOTES.md, AI_USAGE.md, BUGS.md, and REVIEW.md before pushing." >&2
+fi

@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "docs:refresh": "bash ./scripts/refresh-deliverable-docs.sh",
+    "verify:deliverables": "bash ./scripts/verify-deliverables.sh --staged",
     "commit:with-docs": "bash ./scripts/commit-with-docs.sh",
     "ship:with-docs": "bash ./scripts/commit-with-docs.sh --push",
     "hooks:install": "bash ./scripts/install-hooks.sh",

@@ -11,11 +11,14 @@
 - Main agent only: inspected the staged bootstrap/seed patch, updated the review artifacts, and handled verification locally.
 - No new sub-agents were used for the latest patch because the changes were small, tightly coupled, and mostly about runtime boundaries and repo hygiene.
 - Main agent only: investigated the `/app/notes` runtime failure, isolated the broken Drizzle query shape, implemented the minimal query-builder extraction, and added the regression test locally.
+- Main agent only: implemented cursor-based note pagination, the incremental `/api/notes` feed path, route-level loading states, and the follow-up cursor query fix locally.
+- Main agent only: replaced the nested post-commit docs automation with pre-commit/pre-push verification so deliverable docs must already be updated before shipping code.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
 - The latest patch did not use parallel workers; keeping it local reduced the chance of missing cross-file implications between package scripts, seed code, and shared Supabase helpers.
 - The notes query fix also stayed local because the failure sat on a single critical path and the fastest safe move was to inspect the generated SQL, patch the query branch, and validate it immediately.
+- The pagination and docs-enforcement work also stayed local because both changes touched critical repo-wide paths: notes query ordering, API error classification, client feed behavior, hooks, wrapper scripts, and the required project docs.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
@@ -28,8 +31,11 @@
 - The final integration and verification pass was handled locally to reconcile overlapping assumptions and get the repo to a clean `lint` + `test` + `build` state.
 - The latest patch was reviewed and documented locally because the affected files sit on the same execution path: package scripts invoke seed/Drizzle, seed imports shared DB and service helpers, and the seed flow depends on storage bootstrap being correct.
 - The notes query regression was also handled locally because the bug was narrow, reproducible, and safer to fix with a direct SQL-shape regression test than with a parallel handoff.
+- The pagination follow-up remained local because the first implementation changed both SSR and incremental client fetching, and the fastest safe path was to inspect the generated SQL, verify the second-page request, and patch the cursor branch directly.
+- The docs-consistency fix also stayed local because it changes the repo’s commit/push contract and should not be delegated while the enforcement behavior is still being established.
 
 ## What I Still Do Not Trust Agents To Do
 - Cross-boundary fixes that span framework markers like `server-only`, CLI entry points, and environment bootstrapping without a local verification pass.
 - Review artifact updates that claim a repo state has been verified when the latest staged patch has not actually been exercised.
 - Query-builder fixes in permission-sensitive paths without inspecting the generated SQL or running the real code path they affect.
+- Hook and wrapper automation that rewrites repo state after a commit. For this repo, agents should update docs explicitly first and use hooks only for validation or reminders.

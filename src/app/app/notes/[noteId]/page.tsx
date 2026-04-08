@@ -52,7 +52,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
                 </span>
               ))}
             </div>
-            <h2 className="text-3xl font-semibold tracking-tight">{note.title}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-zinc-950">{note.title}</h2>
             <p className="text-sm text-zinc-500">
               {note.authorDisplayName} · version {note.currentVersionNumber} · updated{" "}
               {new Date(note.updatedAt).toLocaleString()}
@@ -62,7 +62,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
             <div className="flex flex-wrap gap-3">
               <Link
                 href={`/app/notes/${note.id}/edit`}
-                className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                className="whitespace-nowrap rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
               >
                 Edit
               </Link>
@@ -70,7 +70,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
                 <input type="hidden" name="noteId" value={note.id} />
                 <button
                   type="submit"
-                  className="rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                  className="whitespace-nowrap rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
                 >
                   Delete
                 </button>
