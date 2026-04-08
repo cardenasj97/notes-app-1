@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import type { NoteFormActionState } from "./action-state";
 import { createNote, deleteNote, shareNoteWithUsers, updateNote } from "./service";
+import { noteFormSchema } from "./validation";
 
 function getNoteId(formData: FormData) {
   const noteId = formData.get("noteId");
@@ -25,18 +27,84 @@ function getOrganizationId(formData: FormData) {
   return organizationId;
 }
 
-export async function createNoteAction(formData: FormData) {
-  const organizationId = getOrganizationId(formData);
-  const note = await createNote(organizationId, formData);
-  revalidatePath("/app/notes");
-  redirect(`/app/notes/${note.id}`);
+function extractFormFields(formData: FormData) {
+  return {
+    title: formData.get("title"),
+    body: formData.get("body"),
+    visibility: formData.get("visibility"),
+    tags: formData.get("tags"),
+    sharedUserIds: formData.get("sharedUserIds"),
+  };
 }
 
-export async function updateNoteAction(formData: FormData) {
+function buildFieldValues(formData: FormData) {
+  return {
+    title: String(formData.get("title") ?? ""),
+    body: String(formData.get("body") ?? ""),
+    visibility: String(formData.get("visibility") ?? ""),
+    tags: String(formData.get("tags") ?? ""),
+    sharedUserIds: String(formData.get("sharedUserIds") ?? ""),
+  };
+}
+
+export async function createNoteAction(
+  _state: NoteFormActionState,
+  formData: FormData,
+): Promise<NoteFormActionState> {
+  const organizationId = getOrganizationId(formData);
+  const parsed = noteFormSchema.safeParse(extractFormFields(formData));
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Check the highlighted fields.",
+      fieldValues: buildFieldValues(formData),
+    };
+  }
+
+  try {
+    const note = await createNote(organizationId, parsed.data);
+    revalidatePath("/app/notes");
+    redirect(`/app/notes/${note.id}`);
+  } catch (error) {
+    if (error instanceof Error && "digest" in error) throw error;
+    return {
+      message: error instanceof Error ? error.message : "Failed to create note.",
+      fieldValues: buildFieldValues(formData),
+    };
+  }
+
+  return {};
+}
+
+export async function updateNoteAction(
+  _state: NoteFormActionState,
+  formData: FormData,
+): Promise<NoteFormActionState> {
   const noteId = getNoteId(formData);
-  const note = await updateNote(noteId, formData);
-  revalidatePath("/app/notes");
-  redirect(`/app/notes/${note.id}`);
+  const parsed = noteFormSchema.safeParse(extractFormFields(formData));
+
+  if (!parsed.success) {
+    return {
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      message: "Check the highlighted fields.",
+      fieldValues: buildFieldValues(formData),
+    };
+  }
+
+  try {
+    const note = await updateNote(noteId, parsed.data);
+    revalidatePath("/app/notes");
+    redirect(`/app/notes/${note.id}`);
+  } catch (error) {
+    if (error instanceof Error && "digest" in error) throw error;
+    return {
+      message: error instanceof Error ? error.message : "Failed to update note.",
+      fieldValues: buildFieldValues(formData),
+    };
+  }
+
+  return {};
 }
 
 export async function deleteNoteAction(formData: FormData) {

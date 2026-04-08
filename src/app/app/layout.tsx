@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { getAppShellContext } from "@/server/orgs/context";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Notes App 1",
   description: "Multi-tenant notes app",

@@ -30,7 +30,7 @@ import {
 } from "./mock-data";
 import { canManageSharing, canReadNote, canWriteNote, isOrganizationMember } from "./permissions";
 import { buildListAccessibleNotesPageQuery } from "./queries";
-import { noteFormSchema, notePageSchema, noteSearchSchema, parseList } from "./validation";
+import { noteSearchSchema, parseList, type NoteFormValues } from "./validation";
 import type {
   NoteDiff,
   NoteListPage,
@@ -58,6 +58,7 @@ type NoteListRow = {
   body: string;
   shareCount: number;
   score: number;
+  updatedAtCursor: string;
 };
 export class InvalidNotesCursorError extends Error {
   constructor(message = "Invalid notes cursor") {
@@ -181,7 +182,7 @@ function decodeNotesCursor(cursor: string, hasSearch: boolean) {
 
 function buildNextCursor(row: NoteListRow, hasSearch: boolean) {
   return encodeNotesCursor({
-    updatedAt: row.updatedAt.toISOString(),
+    updatedAt: row.updatedAtCursor,
     id: row.id,
     ...(hasSearch ? { score: Number(row.score) } : {}),
   });
@@ -481,9 +482,8 @@ export async function listAccessibleNotesPage(
 ): Promise<NoteListPage> {
   const viewer = await getActiveNotesViewer();
   assertOrganizationAccess(viewer, organizationId);
-  const parsed = notePageSchema.parse({ q: query, cursor, limit });
-  const search = parsed.q;
-  const decodedCursor = parsed.cursor ? decodeNotesCursor(parsed.cursor, Boolean(search)) : null;
+  const search = query.trim();
+  const decodedCursor = cursor ? decodeNotesCursor(cursor, Boolean(search)) : null;
 
   if (!hasDatabaseConfig()) {
     const notes = getDemoNotesForOrg(viewer, organizationId);
@@ -494,9 +494,9 @@ export async function listAccessibleNotesPage(
           .sort((left, right) => right.score - left.score || right.updatedAt.localeCompare(left.updatedAt))
       : notes.map((note) => ({ ...noteToListItem(note), score: 0 }));
     const startIndex = decodedCursor ? ranked.findIndex((note) => note.id === decodedCursor.id) + 1 : 0;
-    const slice = ranked.slice(startIndex, startIndex + parsed.limit + 1);
-    const hasMore = slice.length > parsed.limit;
-    const pageItems = slice.slice(0, parsed.limit);
+    const slice = ranked.slice(startIndex, startIndex + limit + 1);
+    const hasMore = slice.length > limit;
+    const pageItems = slice.slice(0, limit);
     const nextCursorValue = hasMore
       ? encodeNotesCursor({
           updatedAt: pageItems[pageItems.length - 1]!.updatedAt,
@@ -528,10 +528,10 @@ export async function listAccessibleNotesPage(
     userId: viewer.userId,
     search,
     cursor: decodedCursor,
-    limit: parsed.limit,
+    limit,
   }) as NoteListRow[];
-  const hasMore = rows.length > parsed.limit;
-  const pageRows = rows.slice(0, parsed.limit);
+  const hasMore = rows.length > limit;
+  const pageRows = rows.slice(0, limit);
 
   return {
     items: pageRows.map(rowToListItem),
@@ -600,22 +600,14 @@ export async function getNoteVersionDiff(noteId: string, fromVersionNumber: numb
   return compareVersionSnapshots(previous, current);
 }
 
-export async function createNote(organizationId: string, formData: FormData) {
+export async function createNote(organizationId: string, data: NoteFormValues) {
   const viewer = await getActiveNotesViewer();
   assertOrganizationAccess(viewer, organizationId);
 
-  const parsed = noteFormSchema.parse({
-    title: formData.get("title"),
-    body: formData.get("body"),
-    visibility: formData.get("visibility"),
-    tags: formData.get("tags"),
-    sharedUserIds: formData.get("sharedUserIds"),
-  });
-
-  const tags = normalizeNoteTags(parseList(parsed.tags));
-  const candidateSharedUserIds = uniqueStrings(parseList(parsed.sharedUserIds));
+  const tags = normalizeNoteTags(parseList(data.tags));
+  const candidateSharedUserIds = uniqueStrings(parseList(data.sharedUserIds));
   const sharedUserIds =
-    parsed.visibility === "shared"
+    data.visibility === "shared"
       ? (await filterOrganizationMemberIds(organizationId, candidateSharedUserIds)).filter(
           (userId) => userId !== viewer.userId,
         )
@@ -635,9 +627,9 @@ export async function createNote(organizationId: string, formData: FormData) {
     editedByDisplayName: viewer.displayName,
     changeSource: "manual_edit" as const,
     changedFields: ["title", "body", "visibility", "tags", ...(sharedUserIds.length ? ["shares"] : [])],
-    titleSnapshot: parsed.title,
-    bodySnapshot: parsed.body,
-    visibilitySnapshot: parsed.visibility,
+    titleSnapshot: data.title,
+    bodySnapshot: data.body,
+    visibilitySnapshot: data.visibility,
     tagsSnapshot: tags,
     sharedUserIdsSnapshot: sharedUserIds,
     acceptedSummarySnapshot: null,
@@ -659,9 +651,9 @@ export async function createNote(organizationId: string, formData: FormData) {
       authorId: viewer.userId,
       authorDisplayName: viewer.displayName,
       authorEmail: viewer.email,
-      title: parsed.title,
-      body: parsed.body,
-      visibility: parsed.visibility,
+      title: data.title,
+      body: data.body,
+      visibility: data.visibility,
       tags,
       sharedUsers,
       currentVersionNumber: 1,
@@ -683,12 +675,12 @@ export async function createNote(organizationId: string, formData: FormData) {
       id: noteId,
       organizationId,
       authorId: viewer.userId,
-      title: parsed.title,
-      body: parsed.body,
-      visibility: parsed.visibility,
+      title: data.title,
+      body: data.body,
+      visibility: data.visibility,
       currentVersionNumber: 1,
       acceptedSummary: null,
-      searchDocument: buildSearchDocument(parsed.title, parsed.body, tags),
+      searchDocument: buildSearchDocument(data.title, data.body, tags),
       createdAt: now,
       updatedAt: now,
     });
@@ -703,9 +695,9 @@ export async function createNote(organizationId: string, formData: FormData) {
       editedBy: viewer.userId,
       changeSource: "manual_edit",
       changedFields: nextVersion.changedFields,
-      titleSnapshot: parsed.title,
-      bodySnapshot: parsed.body,
-      visibilitySnapshot: parsed.visibility,
+      titleSnapshot: data.title,
+      bodySnapshot: data.body,
+      visibilitySnapshot: data.visibility,
       tagsSnapshot: tags,
       sharedUserIdsSnapshot: sharedUserIds,
       acceptedSummarySnapshot: null,
@@ -720,7 +712,7 @@ export async function createNote(organizationId: string, formData: FormData) {
     entityType: "note",
     entityId: noteId,
     payload: {
-      visibility: parsed.visibility,
+      visibility: data.visibility,
       tags,
       sharedUserIds,
     },
@@ -729,7 +721,7 @@ export async function createNote(organizationId: string, formData: FormData) {
   return getNoteDetail(noteId);
 }
 
-export async function updateNote(noteId: string, formData: FormData) {
+export async function updateNote(noteId: string, data: NoteFormValues) {
   const viewer = await getActiveNotesViewer();
   const existing = await getNoteDetail(noteId);
 
@@ -737,18 +729,10 @@ export async function updateNote(noteId: string, formData: FormData) {
     throw accessError("Only the author can edit this note.");
   }
 
-  const parsed = noteFormSchema.parse({
-    title: formData.get("title"),
-    body: formData.get("body"),
-    visibility: formData.get("visibility"),
-    tags: formData.get("tags"),
-    sharedUserIds: formData.get("sharedUserIds"),
-  });
-
-  const tags = normalizeNoteTags(parseList(parsed.tags));
-  const candidateSharedUserIds = uniqueStrings(parseList(parsed.sharedUserIds));
+  const tags = normalizeNoteTags(parseList(data.tags));
+  const candidateSharedUserIds = uniqueStrings(parseList(data.sharedUserIds));
   const sharedUserIds =
-    parsed.visibility === "shared"
+    data.visibility === "shared"
       ? (await filterOrganizationMemberIds(existing.organizationId, candidateSharedUserIds)).filter(
           (userId) => userId !== viewer.userId,
         )
@@ -764,9 +748,9 @@ export async function updateNote(noteId: string, formData: FormData) {
     editedBy: viewer.userId,
     editedByDisplayName: viewer.displayName,
     changeSource: "manual_edit",
-    titleSnapshot: parsed.title,
-    bodySnapshot: parsed.body,
-    visibilitySnapshot: parsed.visibility,
+    titleSnapshot: data.title,
+    bodySnapshot: data.body,
+    visibilitySnapshot: data.visibility,
     tagsSnapshot: tags,
     sharedUserIdsSnapshot: sharedUserIds,
     acceptedSummarySnapshot: existing.acceptedSummary,
@@ -785,9 +769,9 @@ export async function updateNote(noteId: string, formData: FormData) {
 
     const updated: NoteRecord = {
       ...existing,
-      title: parsed.title,
-      body: parsed.body,
-      visibility: parsed.visibility,
+      title: data.title,
+      body: data.body,
+      visibility: data.visibility,
       tags,
       sharedUsers,
       currentVersionNumber: nextVersionNumber,
@@ -812,12 +796,12 @@ export async function updateNote(noteId: string, formData: FormData) {
     await tx
       .update(noteTable)
       .set({
-        title: parsed.title,
-        body: parsed.body,
-        visibility: parsed.visibility,
+        title: data.title,
+        body: data.body,
+        visibility: data.visibility,
         currentVersionNumber: nextVersionNumber,
         acceptedSummary: existing.acceptedSummary,
-        searchDocument: buildSearchDocument(parsed.title, parsed.body, tags),
+        searchDocument: buildSearchDocument(data.title, data.body, tags),
         updatedAt: now,
       })
       .where(eq(noteTable.id, noteId));
@@ -832,9 +816,9 @@ export async function updateNote(noteId: string, formData: FormData) {
       editedBy: viewer.userId,
       changeSource: "manual_edit",
       changedFields,
-      titleSnapshot: parsed.title,
-      bodySnapshot: parsed.body,
-      visibilitySnapshot: parsed.visibility,
+      titleSnapshot: data.title,
+      bodySnapshot: data.body,
+      visibilitySnapshot: data.visibility,
       tagsSnapshot: tags,
       sharedUserIdsSnapshot: sharedUserIds,
       acceptedSummarySnapshot: existing.acceptedSummary,

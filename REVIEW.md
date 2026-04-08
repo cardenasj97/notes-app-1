@@ -37,6 +37,7 @@
 - The current staged patch is another small correctness and handoff pass: document the app more clearly in the README, clear stale accepted AI draft state, and move tag constraints closer to the form boundary so bad note payloads fail earlier and more predictably.
 - The email confirmation app flow was removed. Signup no longer sends users through `/auth/callback` or `/auth/confirmed`, and immediate access now assumes Supabase email confirmation is disabled at the project level.
 - The current staged patch is a narrower deployment/auth hardening pass: Railway now checks a dedicated health endpoint, the `/app` shell fails closed with a controlled error screen for non-redirect exceptions, and sign-in/sign-up only redirect when a complete app auth context exists.
+- The current staged patch is a narrower note-authoring hardening pass: create/edit now return structured action-state errors instead of dropping the submission into a generic failure path, the `/app` layout is forced dynamic to reduce stale auth-shell state, and `Load more` defensively drops duplicate note ids during pagination appends.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

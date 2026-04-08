@@ -28,7 +28,7 @@ function castCursorId(id: string) {
 }
 
 function castCursorScore(score: number) {
-  return sql`${score}::double precision`;
+  return sql`${score}::real`;
 }
 
 function buildBrowseCursorFilter(cursor: NotesPageCursor): SQL {
@@ -108,6 +108,7 @@ export function buildListAccessibleNotesPageQuery(
       body: noteTable.body,
       shareCount: sql<number>`(select count(*)::int from note_shares where note_shares.note_id = ${noteTable.id})`,
       score: scoreSql,
+      updatedAtCursor: sql<string>`to_char(${noteTable.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
     })
     .from(noteTable)
     .innerJoin(profilesTable, eq(noteTable.authorId, profilesTable.id))

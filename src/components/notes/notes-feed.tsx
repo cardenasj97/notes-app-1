@@ -131,7 +131,11 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
       }
 
       const payload = (await response.json()) as NoteListPage;
-      setItems((current) => [...current, ...payload.items]);
+      setItems((current) => {
+        const existingIds = new Set(current.map((item) => item.id));
+        const newItems = payload.items.filter((item) => !existingIds.has(item.id));
+        return [...current, ...newItems];
+      });
       setNextCursor(payload.nextCursor);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Failed to load more notes");
