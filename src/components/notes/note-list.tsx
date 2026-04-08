@@ -8,6 +8,10 @@ type NoteListProps = {
   organizationId: string;
 };
 
+type NoteListSkeletonProps = {
+  count?: number;
+};
+
 const visibilityStyles: Record<NoteListItem["visibility"], string> = {
   private: "bg-zinc-900 text-white",
   org: "bg-sky-100 text-sky-900",
@@ -55,6 +59,37 @@ export function NoteList({ notes, organizationId }: NoteListProps) {
             {note.authorDisplayName} · {note.shareCount} shared · org {organizationId.slice(0, 8)}
           </p>
         </Link>
+      ))}
+    </div>
+  );
+}
+
+export function NoteListSkeleton({ count = 6 }: NoteListSkeletonProps) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm"
+          aria-hidden="true"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="h-7 w-16 animate-pulse rounded-full bg-zinc-200" />
+            <div className="h-4 w-8 animate-pulse rounded bg-zinc-200" />
+          </div>
+          <div className="mt-4 h-6 w-4/5 animate-pulse rounded bg-zinc-200" />
+          <div className="mt-2 space-y-2">
+            <div className="h-4 w-full animate-pulse rounded bg-zinc-100" />
+            <div className="h-4 w-11/12 animate-pulse rounded bg-zinc-100" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-100" />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <div className="h-7 w-20 animate-pulse rounded-full bg-zinc-100" />
+            <div className="h-7 w-16 animate-pulse rounded-full bg-zinc-100" />
+            <div className="h-7 w-24 animate-pulse rounded-full bg-zinc-100" />
+          </div>
+          <div className="mt-4 h-4 w-40 animate-pulse rounded bg-zinc-100" />
+        </div>
       ))}
     </div>
   );

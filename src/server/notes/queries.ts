@@ -7,18 +7,63 @@ import {
   profiles as profilesTable,
   tags as tagsTable,
 } from "@/db/schema";
+import type { NotesPageCursor } from "@/server/notes/types";
 
 type NotesQueryDb = Pick<ReturnType<typeof getDb>, "select">;
 
-type BuildListAccessibleNotesQueryInput = {
+type BuildListAccessibleNotesPageQueryInput = {
   organizationId: string;
   userId: string;
   search: string;
+  cursor: NotesPageCursor | null;
+  limit: number;
 };
 
-export function buildListAccessibleNotesQuery(
+function castCursorTimestamp(updatedAtIso: string) {
+  return sql`${updatedAtIso}::timestamptz`;
+}
+
+function castCursorId(id: string) {
+  return sql`${id}::uuid`;
+}
+
+function castCursorScore(score: number) {
+  return sql`${score}::double precision`;
+}
+
+function buildBrowseCursorFilter(cursor: NotesPageCursor): SQL {
+  const updatedAt = castCursorTimestamp(cursor.updatedAt);
+  const id = castCursorId(cursor.id);
+
+  return sql`
+    (
+      ${noteTable.updatedAt} < ${updatedAt}
+      OR (${noteTable.updatedAt} = ${updatedAt} AND ${noteTable.id} < ${id})
+    )
+  `;
+}
+
+function buildSearchCursorFilter(scoreSql: SQL, cursor: NotesPageCursor): SQL {
+  const score = castCursorScore(cursor.score ?? 0);
+  const updatedAt = castCursorTimestamp(cursor.updatedAt);
+  const id = castCursorId(cursor.id);
+
+  return sql`
+    (
+      ${scoreSql} < ${score}
+      OR (${scoreSql} = ${score} AND ${noteTable.updatedAt} < ${updatedAt})
+      OR (
+        ${scoreSql} = ${score}
+        AND ${noteTable.updatedAt} = ${updatedAt}
+        AND ${noteTable.id} < ${id}
+      )
+    )
+  `;
+}
+
+export function buildListAccessibleNotesPageQuery(
   db: NotesQueryDb,
-  { organizationId, userId, search }: BuildListAccessibleNotesQueryInput,
+  { organizationId, userId, search, cursor, limit }: BuildListAccessibleNotesPageQueryInput,
 ) {
   const searchFilter: SQL = search
     ? sql`to_tsvector('english', ${noteTable.searchDocument}) @@ plainto_tsquery('english', ${search})`
@@ -41,6 +86,11 @@ export function buildListAccessibleNotesQuery(
   const scoreSql = search
     ? sql<number>`ts_rank(to_tsvector('english', ${noteTable.searchDocument}), plainto_tsquery('english', ${search}))`
     : sql<number>`0`;
+  const cursorFilter: SQL = !cursor
+    ? sql`true`
+    : search
+      ? buildSearchCursorFilter(scoreSql, cursor)
+      : buildBrowseCursorFilter(cursor);
 
   const query = db
     .select({
@@ -66,13 +116,15 @@ export function buildListAccessibleNotesQuery(
         isNull(noteTable.deletedAt),
         visibilityFilter,
         searchFilter,
+        cursorFilter,
       ),
     )
-    .groupBy(noteTable.id, profilesTable.displayName);
+    .groupBy(noteTable.id, profilesTable.displayName)
+    .limit(limit + 1);
 
   if (!search) {
-    return query.orderBy(desc(noteTable.updatedAt));
+    return query.orderBy(desc(noteTable.updatedAt), desc(noteTable.id));
   }
 
-  return query.orderBy(desc(scoreSql), desc(noteTable.updatedAt));
+  return query.orderBy(desc(scoreSql), desc(noteTable.updatedAt), desc(noteTable.id));
 }

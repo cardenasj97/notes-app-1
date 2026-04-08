@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { NoteList } from "@/components/notes/note-list";
-import { getOrganizationNotes } from "@/server/notes/service";
+import { NotesFeed } from "@/components/notes/notes-feed";
+import { getOrganizationNotesPage } from "@/server/notes/service";
 import { getAppShellContext } from "@/server/orgs/service";
 
 type NotesPageProps = {
@@ -18,7 +18,7 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
   const query = params.q ?? "";
   const organization =
     context.organizations.find((item) => item.id === organizationId) ?? context.activeOrganization ?? null;
-  const notes = organizationId ? await getOrganizationNotes(organizationId, query) : [];
+  const notePage = organizationId ? await getOrganizationNotesPage(organizationId, query) : null;
 
   return (
     <div className="space-y-8">
@@ -63,7 +63,12 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
       ) : null}
 
       {organizationId ? (
-        <NoteList notes={notes} organizationId={organizationId} />
+        <NotesFeed
+          initialItems={notePage?.items ?? []}
+          initialNextCursor={notePage?.nextCursor ?? null}
+          organizationId={organizationId}
+          query={query}
+        />
       ) : (
         <div className="rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-zinc-500">
           Create or join an organization to start using notes.

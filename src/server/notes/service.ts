@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import { z } from "zod";
 
 import { getDb, hasDatabaseConfig } from "@/db/client";
 import {
@@ -28,12 +29,14 @@ import {
   setDemoNote,
 } from "./mock-data";
 import { canManageSharing, canReadNote, canWriteNote, isOrganizationMember } from "./permissions";
-import { buildListAccessibleNotesQuery } from "./queries";
-import { noteFormSchema, noteSearchSchema, parseList } from "./validation";
+import { buildListAccessibleNotesPageQuery } from "./queries";
+import { noteFormSchema, notePageSchema, noteSearchSchema, parseList } from "./validation";
 import type {
   NoteDiff,
+  NoteListPage,
   NoteListItem,
   NoteRecord,
+  NotesPageCursor,
   NoteSearchResult,
   NoteVersionSummary,
   NotesViewer,
@@ -43,6 +46,32 @@ type NoteAccessError = Error & { status?: number };
 type DbClient = ReturnType<typeof getDb>;
 type DbTransaction = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
 type DbExecutor = DbClient | DbTransaction;
+type NoteListRow = {
+  id: string;
+  organizationId: string;
+  authorDisplayName: string;
+  title: string;
+  visibility: NoteListItem["visibility"];
+  tags: string[] | null;
+  currentVersionNumber: number;
+  updatedAt: Date;
+  body: string;
+  shareCount: number;
+  score: number;
+};
+export class InvalidNotesCursorError extends Error {
+  constructor(message = "Invalid notes cursor") {
+    super(message);
+    this.name = "InvalidNotesCursorError";
+  }
+}
+
+const NOTES_PAGE_SIZE = 24;
+const notesCursorSchema = z.object({
+  updatedAt: z.string().datetime(),
+  id: z.string().uuid(),
+  score: z.number().finite().optional(),
+});
 
 function accessError(message: string, status = 403): NoteAccessError {
   const error = new Error(message) as NoteAccessError;
@@ -107,6 +136,55 @@ function noteToSearchResult(note: NoteRecord, score: number): NoteSearchResult {
     ...noteToListItem(note),
     score,
   };
+}
+
+function rowToListItem(row: NoteListRow): NoteListItem {
+  return {
+    id: row.id,
+    organizationId: row.organizationId,
+    authorDisplayName: row.authorDisplayName,
+    title: row.title,
+    visibility: row.visibility,
+    tags: row.tags ?? [],
+    currentVersionNumber: row.currentVersionNumber,
+    updatedAt: row.updatedAt.toISOString(),
+    bodyPreview: makeBodyPreview(row.body),
+    shareCount: Number(row.shareCount),
+  };
+}
+
+function encodeNotesCursor(cursor: NotesPageCursor) {
+  return Buffer.from(JSON.stringify(cursor)).toString("base64url");
+}
+
+function decodeNotesCursor(cursor: string, hasSearch: boolean) {
+  try {
+    const parsed = notesCursorSchema.parse(
+      JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as unknown,
+    );
+
+    if (hasSearch && typeof parsed.score !== "number") {
+      throw new InvalidNotesCursorError();
+    }
+
+    return parsed;
+  } catch (error) {
+    if (error instanceof InvalidNotesCursorError) {
+      throw error;
+    }
+
+    throw new InvalidNotesCursorError(
+      error instanceof Error ? error.message : "Invalid notes cursor",
+    );
+  }
+}
+
+function buildNextCursor(row: NoteListRow, hasSearch: boolean) {
+  return encodeNotesCursor({
+    updatedAt: row.updatedAt.toISOString(),
+    id: row.id,
+    ...(hasSearch ? { score: Number(row.score) } : {}),
+  });
 }
 
 function cloneNote(note: NoteRecord): NoteRecord {
@@ -383,41 +461,82 @@ export async function getActiveNotesViewer(): Promise<NotesViewer> {
 }
 
 export async function listAccessibleNotes(organizationId: string, query = "") {
+  const items: NoteListItem[] = [];
+  let cursor: string | null = null;
+
+  do {
+    const page = await listAccessibleNotesPage(organizationId, query, cursor ?? "", 100);
+    items.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor);
+
+  return items;
+}
+
+export async function listAccessibleNotesPage(
+  organizationId: string,
+  query = "",
+  cursor = "",
+  limit = NOTES_PAGE_SIZE,
+): Promise<NoteListPage> {
   const viewer = await getActiveNotesViewer();
   assertOrganizationAccess(viewer, organizationId);
+  const parsed = notePageSchema.parse({ q: query, cursor, limit });
+  const search = parsed.q;
+  const decodedCursor = parsed.cursor ? decodeNotesCursor(parsed.cursor, Boolean(search)) : null;
 
   if (!hasDatabaseConfig()) {
     const notes = getDemoNotesForOrg(viewer, organizationId);
-    const search = noteSearchSchema.parse({ q: query }).q;
-    const filtered = search
-      ? notes.filter((note) =>
-          [note.title, note.body, note.tags.join(" ")].join(" ").toLowerCase().includes(search.toLowerCase()),
-        )
-      : notes;
+    const ranked = search
+      ? notes
+          .map((note) => noteToSearchResult(note, scoreMatch(note, search)))
+          .filter((note) => note.score > 0)
+          .sort((left, right) => right.score - left.score || right.updatedAt.localeCompare(left.updatedAt))
+      : notes.map((note) => ({ ...noteToListItem(note), score: 0 }));
+    const startIndex = decodedCursor ? ranked.findIndex((note) => note.id === decodedCursor.id) + 1 : 0;
+    const slice = ranked.slice(startIndex, startIndex + parsed.limit + 1);
+    const hasMore = slice.length > parsed.limit;
+    const pageItems = slice.slice(0, parsed.limit);
+    const nextCursorValue = hasMore
+      ? encodeNotesCursor({
+          updatedAt: pageItems[pageItems.length - 1]!.updatedAt,
+          id: pageItems[pageItems.length - 1]!.id,
+          ...(search ? { score: pageItems[pageItems.length - 1]!.score } : {}),
+        })
+      : null;
 
-    return filtered.map(noteToListItem);
+    return {
+      items: pageItems.map((note) => ({
+        id: note.id,
+        organizationId: note.organizationId,
+        authorDisplayName: note.authorDisplayName,
+        title: note.title,
+        visibility: note.visibility,
+        tags: note.tags,
+        currentVersionNumber: note.currentVersionNumber,
+        updatedAt: note.updatedAt,
+        bodyPreview: note.bodyPreview,
+        shareCount: note.shareCount,
+      })),
+      nextCursor: nextCursorValue,
+    };
   }
 
   const db = getDb();
-  const search = noteSearchSchema.parse({ q: query }).q;
-  const rows = await buildListAccessibleNotesQuery(db, {
+  const rows = await buildListAccessibleNotesPageQuery(db, {
     organizationId,
     userId: viewer.userId,
     search,
-  });
+    cursor: decodedCursor,
+    limit: parsed.limit,
+  }) as NoteListRow[];
+  const hasMore = rows.length > parsed.limit;
+  const pageRows = rows.slice(0, parsed.limit);
 
-  return rows.map((row) => ({
-    id: row.id,
-    organizationId: row.organizationId,
-    authorDisplayName: row.authorDisplayName,
-    title: row.title,
-    visibility: row.visibility,
-    tags: row.tags ?? [],
-    currentVersionNumber: row.currentVersionNumber,
-    updatedAt: row.updatedAt.toISOString(),
-    bodyPreview: makeBodyPreview(row.body),
-    shareCount: Number(row.shareCount),
-  }));
+  return {
+    items: pageRows.map(rowToListItem),
+    nextCursor: hasMore ? buildNextCursor(pageRows[pageRows.length - 1]!, Boolean(search)) : null,
+  };
 }
 
 export async function searchAccessibleNotes(organizationId: string, query = "") {
@@ -763,6 +882,15 @@ export async function deleteNote(noteId: string) {
 
 export async function getOrganizationNotes(organizationId: string, query = "") {
   return listAccessibleNotes(organizationId, query);
+}
+
+export async function getOrganizationNotesPage(
+  organizationId: string,
+  query = "",
+  cursor = "",
+  limit = NOTES_PAGE_SIZE,
+) {
+  return listAccessibleNotesPage(organizationId, query, cursor, limit);
 }
 
 export async function getNoteSearchResults(organizationId: string, query = "") {

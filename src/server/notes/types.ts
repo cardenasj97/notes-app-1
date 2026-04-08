@@ -86,4 +86,15 @@ export type NoteSearchResult = NoteListItem & {
   score: number;
 };
 
+export type NotesPageCursor = {
+  updatedAt: string;
+  id: string;
+  score?: number;
+};
+
+export type NoteListPage = {
+  items: NoteListItem[];
+  nextCursor: string | null;
+};
+
 export type DemoNoteSeed = Omit<NoteRecord, "versions">;
