@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AiSummaryPanel } from "@/components/notes/ai-summary-panel";
+import { DeleteNoteButton } from "@/components/notes/delete-note-button";
 import { FilePanel } from "@/components/notes/file-panel";
 import { NoteDiffView } from "@/components/notes/note-diff-view";
 import { NoteHistory } from "@/components/notes/note-history";
 import { NoteMarkdown } from "@/components/notes/note-markdown";
-import { deleteNoteAction } from "@/server/notes/actions";
 import { listNoteFiles } from "@/server/files/service";
 import { getActiveNotesViewer, getNoteDetail, getNoteVersionDiff } from "@/server/notes/service";
 
@@ -66,15 +66,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
               >
                 Edit
               </Link>
-              <form action={deleteNoteAction}>
-                <input type="hidden" name="noteId" value={note.id} />
-                <button
-                  type="submit"
-                  className="whitespace-nowrap rounded-full border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
-                >
-                  Delete
-                </button>
-              </form>
+              <DeleteNoteButton noteId={note.id} />
             </div>
           ) : null}
         </div>

@@ -25,6 +25,7 @@
 - Main agent only: handled this Railway builder follow-up locally because it is a one-file deployment alignment change and does not benefit from delegation.
 - Main agent only: handled this client-env follow-up locally because it is a tiny browser-runtime fix across two files and not worth delegating.
 - Main agent only: handled this note-sharing form follow-up locally because it spans the new/edit pages and the form’s controlled sharing state, which is small and tightly coupled UI work.
+- Main agent only: handled the not-found page and delete loading state follow-up locally because both changes are small, self-contained, and concern the same note detail route.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -43,6 +44,7 @@
 - This Railway follow-up also stayed local because it is just deployment config alignment: use the repo Dockerfile instead of a parallel Nixpacks path.
 - This client-env follow-up also stayed local because it is just a small Next.js runtime nuance: keep browser env access direct so the public values are actually inlined.
 - This note-sharing follow-up also stayed local because it is a small UX correctness pass on one form flow and is faster to implement directly than to split across agents.
+- This not-found/delete-loading follow-up also stayed local because it is two small additions to one route — a static server component and a tiny client wrapper — that do not benefit from delegation.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.

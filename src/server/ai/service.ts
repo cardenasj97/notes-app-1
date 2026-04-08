@@ -11,6 +11,7 @@ import { aiSummarySchema, type AiSummary, type AiSummarySelection } from "@/lib/
 import { recordAuditEvent } from "@/server/audit/service";
 
 import { canGenerateSummary, canReadNote } from "./permissions";
+import { canWriteNote } from "@/server/files/permissions";
 import { acceptAiSummaryInputSchema, generateAiSummaryInputSchema } from "./types";
 
 type AuthContext = {
@@ -192,8 +193,8 @@ export async function acceptAiSummary(input: { draftId: string; selection: AiSum
     throw new Error("Summary draft not found.");
   }
 
-  if (!(await canReadNote(auth.userId, draft.noteId))) {
-    throw new Error("Unauthorized to accept this summary.");
+  if (!(await canWriteNote(auth.userId, draft.noteId))) {
+    throw new Error("Only the note author can accept a summary.");
   }
 
   const [currentVersion] = await db

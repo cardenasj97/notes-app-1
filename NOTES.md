@@ -48,3 +48,5 @@
 - Switched Railway from the generic Nixpacks builder to the checked-in Dockerfile explicitly so deployment now uses the same container path and build args already hardened in the repo.
 - Added a dedicated client-safe env helper for public Supabase values and moved the browser Supabase client onto it, because the server-side Zod env wrapper prevented Next.js from inlining `NEXT_PUBLIC_*` values correctly in the browser bundle.
 - Replaced the raw `sharedUserIds` text input on note create/edit with an organization-member checkbox picker, wiring member lists into the new/edit pages so selective sharing is now discoverable and no longer depends on users typing UUIDs by hand.
+- Added a branded not-found page for the note detail route so deleted or inaccessible notes render a clear message with a back link instead of the generic Next.js 404.
+- Extracted the delete button on the note detail page into a client component using `useFormStatus` so the button shows a "Deleting…" disabled state while the server action is running.
