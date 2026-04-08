@@ -226,6 +226,35 @@ async function resetDatabase() {
   await db.delete(profiles);
 }
 
+async function ensureStorageBucket() {
+  const serviceClient = createSupabaseServiceClient();
+  const bucket = getStorageBucketName();
+
+  if (!serviceClient) {
+    return;
+  }
+
+  const { data, error } = await serviceClient.storage.listBuckets();
+
+  if (error) {
+    throw error;
+  }
+
+  const exists = (data ?? []).some((item) => item.id === bucket || item.name === bucket);
+
+  if (exists) {
+    return;
+  }
+
+  const { error: createError } = await serviceClient.storage.createBucket(bucket, {
+    public: false,
+  });
+
+  if (createError && !createError.message.toLowerCase().includes("already")) {
+    throw createError;
+  }
+}
+
 async function uploadSeedFiles() {
   const serviceClient = createSupabaseServiceClient();
   const bucket = getStorageBucketName();
@@ -262,6 +291,7 @@ async function main() {
   logger.info("seed.start", { target: "notes-app-1" });
 
   const db = getDb();
+  await ensureStorageBucket();
   const userIds = await ensureUsers();
   await resetDatabase();
 

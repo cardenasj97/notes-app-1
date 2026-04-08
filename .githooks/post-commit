@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${CODEX_DOCS_HOOK_DISABLED:-0}" == "1" ]]; then
+  exit 0
+fi
+
+if [[ "${CODEX_DOCS_HOOK_RUNNING:-0}" == "1" ]]; then
+  exit 0
+fi
+
+if ! command -v codex >/dev/null 2>&1; then
+  echo "[post-commit-docs] codex not found; skipping deliverable doc refresh." >&2
+  exit 0
+fi
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+required_files=(NOTES.md AI_USAGE.md BUGS.md REVIEW.md)
+for file in "${required_files[@]}"; do
+  if [[ ! -f "$file" ]]; then
+    echo "[post-commit-docs] missing $file; skipping deliverable doc refresh." >&2
+    exit 0
+  fi
+done
+
+head_sha="$(git rev-parse --short HEAD)"
+head_subject="$(git log -1 --pretty=%s)"
+
+prompt="$(cat <<EOF
+Update NOTES.md, AI_USAGE.md, BUGS.md, and REVIEW.md to reflect the newest repository changes introduced by commit $head_sha.
+
+Requirements:
+- Read the current contents of those four files and inspect the latest commit diff.
+- Update only NOTES.md, AI_USAGE.md, BUGS.md, and REVIEW.md.
+- Keep the writing concise, factual, and cumulative rather than replacing all prior history.
+- Use commit hash $head_sha anywhere the latest commit should be referenced as the fix.
+- Do not create a commit, do not push, and do not modify any other files.
+
+Latest commit subject: $head_subject
+EOF
+)"
+
+if ! CODEX_DOCS_HOOK_RUNNING=1 codex -a never -s workspace-write exec -C "$repo_root" --output-last-message /dev/null "$prompt" >/dev/null 2>&1; then
+  echo "[post-commit-docs] codex refresh failed; leaving docs unchanged." >&2
+  exit 0
+fi
+
+echo "[post-commit-docs] deliverable docs refreshed in working tree." >&2

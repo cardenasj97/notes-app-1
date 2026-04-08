@@ -19,3 +19,13 @@ Multi-tenant notes app built with Next.js, TypeScript, Supabase, Drizzle, and Po
 
 ## Environment
 Copy `.env.example` to `.env.local` and fill in the required values.
+
+## Seeded login credentials
+After running `pnpm db:seed`, you can sign in with these test users:
+
+- `avery@notes-app-1.local` / `NotesApp1!Avery`
+- `mina@notes-app-1.local` / `NotesApp1!Mina`
+- `leo@notes-app-1.local` / `NotesApp1!Leo`
+- `nadia@notes-app-1.local` / `NotesApp1!Nadia`
+- `priya@notes-app-1.local` / `NotesApp1!Priya`
+- `owen@notes-app-1.local` / `NotesApp1!Owen`
