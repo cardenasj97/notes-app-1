@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 
 import { AuthCard } from "@/components/auth/auth-card";
 import { SignUpForm } from "@/components/auth/sign-up-form";
-import { getCurrentSupabaseUser } from "@/server/auth/session";
+import { getCurrentAuthContext } from "@/server/auth/session";
 
 export default async function SignUpPage() {
-  const user = await getCurrentSupabaseUser();
+  const context = await getCurrentAuthContext().catch(() => null);
 
-  if (user) {
+  if (context) {
     redirect("/app");
   }
 

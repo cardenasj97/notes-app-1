@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AuthCard } from "@/components/auth/auth-card";
 import { SignInForm } from "@/components/auth/sign-in-form";
-import { getCurrentSupabaseUser } from "@/server/auth/session";
+import { getCurrentAuthContext } from "@/server/auth/session";
 import { getMissingCoreConfig } from "@/lib/env";
 
 export default async function SignInPage({
@@ -11,9 +11,9 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<Record<string, string>>;
 }) {
-  const user = await getCurrentSupabaseUser();
+  const context = await getCurrentAuthContext().catch(() => null);
 
-  if (user) {
+  if (context) {
     redirect("/app");
   }
 

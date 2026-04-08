@@ -19,6 +19,7 @@
 - Main agent only: handled the current staged patch locally too, because it mixes small but coupled product-surface fixes across the README handoff docs, AI summary acceptance state, note form submit behavior, and tag validation.
 - Main agent only: handled this latest notes-feed follow-up locally because the bug lives entirely in client state reconciliation between debounced search, fetch results, and the server re-render triggered by URL replacement.
 - Main agent only: removed the email confirmation app flow locally because the changes span the signup action, obsolete auth routes, and deliverable docs, and cross-file consistency mattered more than parallelism.
+- Main agent only: handled the current auth/runtime follow-up locally because Railway health checks, app-shell error handling, and auth-page redirect behavior all sit on one deployment-sensitive path and were safer to reconcile in a single pass.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -31,6 +32,7 @@
 - This tiny follow-up also stayed local because the risk was not implementation volume but state-sync correctness, and that is faster to reason about directly than through delegation.
 - This patch also stayed local because it is a small cross-surface cleanup, and splitting README, validation, and note interaction fixes across agents would add review overhead without buying real speed.
 - This auth change also stayed local because the server action, deleted routes, and repo docs all needed to agree on the new no-confirmation assumption.
+- This deployment/auth follow-up also stayed local because it spans one narrow but coupled path: health-check readiness, workspace error boundaries, and the condition for redirecting authenticated users away from sign-in/up.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
