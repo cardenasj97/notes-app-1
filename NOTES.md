@@ -18,4 +18,6 @@
 - Interpreted the `src/db/seed.ts` change as a fix for fresh-project setup failures where file upload seeding would break if the storage bucket had not already been created manually.
 - Noted the `README.md` credential addition as a delivery/supportability improvement so reviewers can sign in immediately after seeding without digging through the seed source.
 - Rewrote `NOTES.md`, `AI_USAGE.md`, `BUGS.md`, and `REVIEW.md` so the deliverables no longer stop at the previous docs-only commit and instead describe the current staged patch too.
+- Added a repo-carried post-commit Codex hook plus `pnpm hooks:install` so the deliverable docs can be refreshed after future commits without relying on memory.
+- Adjusted the first hook version to run in the background after it proved too slow to keep inline on the `git commit` path.
 - Planned a fresh verification pass after the doc refresh so the artifacts reflect the actual current repo state rather than just the intended patch.
