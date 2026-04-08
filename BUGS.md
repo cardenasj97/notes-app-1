@@ -11,3 +11,5 @@
 - The earlier docs automation strategy relied on a nested post-commit Codex run, which made it possible to push code without updated `NOTES.md`, `AI_USAGE.md`, `BUGS.md`, and `REVIEW.md` when the refresh step hung or was bypassed. Fixed in `990f16e`.
 - The notes page still split search behavior between a server-rendered top-level form and a client-side paginated feed, which left the UX inconsistent once pagination moved into the feed. Fixed in `ca54d49`.
 - The note surfaces still had a few polish regressions after the pagination/search refactor: missing back navigation on edit, weak input/body contrast, and button labels that could wrap awkwardly in tighter layouts. Fixed in `364bb41`.
+- The sign-up flow dropped entered `displayName` and `email` values whenever validation or Supabase returned an error, which forced users to retype those fields on every failed submission. Fixed in `6224c3a`.
+- The paginated DB search path had regressed from earlier substring-style matching to full-text matching only, which meant some note queries no longer returned expected results after pagination/search moved into the API path. Fixed in `6224c3a`.
