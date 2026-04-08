@@ -39,3 +39,4 @@
 - Updated the Docker image setup to install `pnpm` directly instead of relying on `corepack enable`, which is safer for container builds that need deterministic package-manager availability.
 - Tightened the note feed UX again by adding debounced client-side search behavior, removing the extra explicit search button state, and polishing compare/upload affordances that still had weaker contrast or layout behavior.
 - Preserved sign-up form field values after validation or Supabase errors so the user no longer has to retype display name and email on every failed submission.
+- Fixed a notes-feed state bug where `router.replace` on debounced client-side search could trigger a server re-render that replayed older `initialItems` back into the client and overwrote the fresher client-fetched results.

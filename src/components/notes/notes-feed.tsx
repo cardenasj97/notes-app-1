@@ -28,9 +28,15 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
   const [searchValue, setSearchValue] = useState(query);
   const abortRef = useRef<AbortController | null>(null);
   const isMountRef = useRef(true);
+  const lastClientQueryRef = useRef<string | null>(null);
   const debouncedSearch = useDebounce(searchValue, 300);
 
   useEffect(() => {
+    // Skip if the client-side search already owns these results —
+    // router.replace triggers a server re-render that feeds back stale
+    // initialItems which would overwrite the client-fetched results.
+    if (lastClientQueryRef.current === query) return;
+
     setItems(initialItems);
     setNextCursor(initialNextCursor);
     setIsLoadingMore(false);
@@ -68,10 +74,16 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
         const payload = (await response.json()) as NoteListPage;
         setItems(payload.items);
         setNextCursor(payload.nextCursor);
+        lastClientQueryRef.current = q;
 
         const nextParams = new URLSearchParams(searchParams.toString());
-        nextParams.set("q", q);
-        router.replace(`?${nextParams.toString()}`, { scroll: false });
+        if (q) {
+          nextParams.set("q", q);
+        } else {
+          nextParams.delete("q");
+        }
+        const qs = nextParams.toString();
+        router.replace(qs ? `?${qs}` : "?", { scroll: false });
       } catch (caughtError) {
         if (caughtError instanceof DOMException && caughtError.name === "AbortError") return;
         setError(caughtError instanceof Error ? caughtError.message : "Search failed");
@@ -90,18 +102,7 @@ export function NotesFeed({ initialItems, initialNextCursor, organizationId, que
       return;
     }
 
-    if (debouncedSearch === "") {
-      abortRef.current?.abort();
-      setItems(initialItems);
-      setNextCursor(initialNextCursor);
-      setIsSearching(false);
-      const nextParams = new URLSearchParams(searchParams.toString());
-      nextParams.delete("q");
-      const qs = nextParams.toString();
-      router.replace(qs ? `?${qs}` : "?", { scroll: false });
-    } else {
-      search(debouncedSearch);
-    }
+    search(debouncedSearch);
   }, [debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadMore() {

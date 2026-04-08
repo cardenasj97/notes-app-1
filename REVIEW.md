@@ -26,12 +26,14 @@
 - After pagination landed, the notes page still had split ownership of search UX between the server page shell and the client feed, which is a smaller but real consistency issue because paging and search now need to share the same state transitions.
 - After the search/pagination cleanup, the remaining issues were mostly UX consistency gaps: note edit lacked a clear return path, some note inputs and actions had weak visual emphasis, and note creation/detail loading states were not yet fully aligned.
 - The current staged patch addresses two smaller UX correctness gaps: search interaction in the notes feed still needed debounced client-side behavior, and sign-up error handling still discarded the user’s typed non-password fields.
+- The current one-file follow-up addresses a client-state regression inside the notes feed: URL synchronization for debounced searches could still allow stale server-fed `initialItems` to overwrite the newer client search results.
 
 ## Current State
 - The current staged patch addresses three things together: notes list scalability via cursor pagination, the cursor query failure on `Load more`, and a stricter repo workflow that requires deliverable docs to be updated before commit/push.
 - The latest staged follow-up cleans up the notes UX around that pagination work by moving search responsibility into the feed, adding missing loading states, and tightening a couple of repo/runtime defaults.
 - The current staged patch is a narrower polish pass on top of that work: better note affordances, more consistent loading/interaction states, and a simpler Docker `pnpm` install path.
 - The next staged follow-up is even narrower: preserve form state on sign-up failures and keep note browsing/search interaction responsive without adding another round of server-owned search UI.
+- The current follow-up is narrower still: keep the debounced search URL sync without letting the server re-render stomp the already-fetched client results.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 
