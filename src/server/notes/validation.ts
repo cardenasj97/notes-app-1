@@ -6,7 +6,19 @@ export const noteFormSchema = z.object({
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().max(50_000),
   visibility: noteVisibilitySchema,
-  tags: z.string().optional().default(""),
+  tags: z
+    .string()
+    .max(500, "Tags input is too long.")
+    .optional()
+    .default("")
+    .refine(
+      (val) => parseList(val).length <= 10,
+      "A note can have at most 10 tags.",
+    )
+    .refine(
+      (val) => parseList(val).every((tag) => tag.length <= 30),
+      "Each tag can be at most 30 characters.",
+    ),
   sharedUserIds: z.string().optional().default(""),
 });
 

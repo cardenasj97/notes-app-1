@@ -112,6 +112,8 @@ export function AiSummaryPanel({
           ? draft.openQuestions
           : currentSummary?.openQuestions ?? [],
       });
+      setDraft(null);
+      setDraftId(null);
       startTransition(() => {
         router.refresh();
       });

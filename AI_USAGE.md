@@ -16,6 +16,7 @@
 - Main agent only: handled the latest notes UX polish locally, including client-side search behavior inside the feed, new-note/detail loading states, shell layout cleanup, and small repo-hygiene config fixes.
 - Main agent only: handled the current follow-up locally too, because it is still a tightly coupled UI/runtime cleanup across note pages, global CSS behavior, file upload controls, and Docker packaging.
 - Main agent only: handled the current staged patch locally because it blends note-feed interaction changes with auth form state handling, which is a small but cross-surface UI correctness pass.
+- Main agent only: handled the current staged patch locally too, because it mixes small but coupled product-surface fixes across the README handoff docs, AI summary acceptance state, note form submit behavior, and tag validation.
 - Main agent only: handled this latest notes-feed follow-up locally because the bug lives entirely in client state reconciliation between debounced search, fetch results, and the server re-render triggered by URL replacement.
 
 ## What Ran In Parallel
@@ -27,6 +28,7 @@
 - This follow-up also stayed local because it is mostly polish and consistency work, where the integration cost of delegating exceeds the implementation cost.
 - The same is true for the current staged patch: the fastest safe move was one local pass across feed state, form state, and visual polish rather than splitting it into separate agents.
 - This tiny follow-up also stayed local because the risk was not implementation volume but state-sync correctness, and that is faster to reason about directly than through delegation.
+- This patch also stayed local because it is a small cross-surface cleanup, and splitting README, validation, and note interaction fixes across agents would add review overhead without buying real speed.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.

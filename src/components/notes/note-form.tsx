@@ -1,3 +1,7 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+
 import type { NoteRecord } from "@/server/notes/types";
 
 type NoteFormProps = {
@@ -66,6 +70,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
             id="tags"
             name="tags"
             defaultValue={tags}
+            maxLength={500}
             placeholder="launch, internal"
             className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
           />
@@ -87,13 +92,21 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
         </p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <button
-          type="submit"
-          className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
-        >
-          {submitLabel}
-        </button>
+        <SubmitButton label={submitLabel} />
       </div>
     </form>
+  );
+}
+
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? "Saving..." : label}
+    </button>
   );
 }

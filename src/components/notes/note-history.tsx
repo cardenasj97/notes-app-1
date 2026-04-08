@@ -5,9 +5,11 @@ import type { NoteVersionSummary } from "@/server/notes/types";
 type NoteHistoryProps = {
   noteId: string;
   versions: NoteVersionSummary[];
+  activeFrom?: number;
+  activeTo?: number;
 };
 
-export function NoteHistory({ noteId, versions }: NoteHistoryProps) {
+export function NoteHistory({ noteId, versions, activeFrom, activeTo }: NoteHistoryProps) {
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">
