@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 
-import { getPublicSupabaseEnv } from "@/lib/env";
+import { getPublicSupabaseEnv } from "@/lib/env-client";
 
 export function createSupabaseBrowserClient() {
   const config = getPublicSupabaseEnv();

@@ -23,6 +23,7 @@
 - Main agent only: handled this notes-actions follow-up locally because form action state, note service inputs, layout caching, and paginated feed behavior all intersect on one user flow and were faster to reason about together than through delegation.
 - Main agent only: handled this deployment-fixture follow-up locally because the Docker build arg wiring and QA upload fixtures are tiny, coupled, and not worth splitting across agents.
 - Main agent only: handled this Railway builder follow-up locally because it is a one-file deployment alignment change and does not benefit from delegation.
+- Main agent only: handled this client-env follow-up locally because it is a tiny browser-runtime fix across two files and not worth delegating.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -39,6 +40,7 @@
 - This notes-actions follow-up also stayed local because it couples server action return shapes, form rendering, pagination edge cases, and dynamic auth-shell rendering on the same request path.
 - This deployment-fixture patch also stayed local because it is just one builder-stage env fix plus static upload fixtures for QA.
 - This Railway follow-up also stayed local because it is just deployment config alignment: use the repo Dockerfile instead of a parallel Nixpacks path.
+- This client-env follow-up also stayed local because it is just a small Next.js runtime nuance: keep browser env access direct so the public values are actually inlined.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
