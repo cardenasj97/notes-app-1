@@ -13,6 +13,9 @@ Multi-tenant notes app built with Next.js, TypeScript, Supabase, Drizzle, and Po
 - `pnpm build`
 - `pnpm lint`
 - `pnpm test`
+- `pnpm docs:refresh`
+- `pnpm commit:with-docs -- "your commit message"`
+- `pnpm ship:with-docs -- "your commit message"`
 - `pnpm db:generate`
 - `pnpm db:push`
 - `pnpm db:seed`
@@ -29,3 +32,28 @@ After running `pnpm db:seed`, you can sign in with these test users:
 - `nadia@notes-app-1.local` / `NotesApp1!Nadia`
 - `priya@notes-app-1.local` / `NotesApp1!Priya`
 - `owen@notes-app-1.local` / `NotesApp1!Owen`
+
+## Hands-off docs workflow
+Install the git hook once:
+
+```bash
+pnpm hooks:install
+```
+
+Hands-off commit flow:
+
+```bash
+pnpm commit:with-docs -- "feat: your change"
+```
+
+That command:
+- stages all non-deliverable changes
+- creates the main code commit
+- runs Codex to refresh `NOTES.md`, `AI_USAGE.md`, `BUGS.md`, and `REVIEW.md`
+- creates a second docs commit if those files changed
+
+If you also want to push automatically:
+
+```bash
+pnpm ship:with-docs -- "feat: your change"
+```

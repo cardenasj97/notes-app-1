@@ -21,3 +21,7 @@
 - Added a repo-carried post-commit Codex hook plus `pnpm hooks:install` so the deliverable docs can be refreshed after future commits without relying on memory.
 - Adjusted the first hook version to run in the background after it proved too slow to keep inline on the `git commit` path.
 - Planned a fresh verification pass after the doc refresh so the artifacts reflect the actual current repo state rather than just the intended patch.
+- Investigated a production-path crash on `/app/notes` and traced it to the DB notes list query ordering by a literal rank fallback, which Drizzle compiled into `order by 0 desc` when no search term was present.
+- Extracted the notes list SQL builder so the empty-search and searched branches can use different `orderBy` behavior without changing the permission filter logic.
+- Added a regression test that inspects generated SQL and explicitly guards against reintroducing `order by 0 desc` in the empty-search branch.
+- Verified the notes query fix with `pnpm lint` and focused Vitest coverage before pushing commit `13e4990`.
