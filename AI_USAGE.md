@@ -18,7 +18,7 @@
 - Main agent only: handled the current staged patch locally because it blends note-feed interaction changes with auth form state handling, which is a small but cross-surface UI correctness pass.
 - Main agent only: handled the current staged patch locally too, because it mixes small but coupled product-surface fixes across the README handoff docs, AI summary acceptance state, note form submit behavior, and tag validation.
 - Main agent only: handled this latest notes-feed follow-up locally because the bug lives entirely in client state reconciliation between debounced search, fetch results, and the server re-render triggered by URL replacement.
-- Main agent only: implemented the email confirmation auto-sign-in flow locally because the changes span four files and integration correctness matters more than parallelism — `actions.ts`, the new callback route handler, the confirmed page, and sign-in error rendering must all agree on the redirect URL and error format.
+- Main agent only: removed the email confirmation app flow locally because the changes span the signup action, obsolete auth routes, and deliverable docs, and cross-file consistency mattered more than parallelism.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -30,7 +30,7 @@
 - The same is true for the current staged patch: the fastest safe move was one local pass across feed state, form state, and visual polish rather than splitting it into separate agents.
 - This tiny follow-up also stayed local because the risk was not implementation volume but state-sync correctness, and that is faster to reason about directly than through delegation.
 - This patch also stayed local because it is a small cross-surface cleanup, and splitting README, validation, and note interaction fixes across agents would add review overhead without buying real speed.
-- The email confirmation flow also stayed local because the four affected files must all agree on redirect URLs and error query-param format, and cross-file consistency is faster to ensure in one pass.
+- This auth change also stayed local because the server action, deleted routes, and repo docs all needed to agree on the new no-confirmation assumption.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
