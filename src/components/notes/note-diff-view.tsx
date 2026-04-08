@@ -15,6 +15,9 @@ export function NoteDiffView({ diff }: NoteDiffViewProps) {
           {diff.changedFields.length ? diff.changedFields.join(", ") : "No field changes"}
         </span>
       </div>
+      {diff.summaryLines.length > 0 ? (
+        <h4 className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-400">Body</h4>
+      ) : null}
       <div className="space-y-1 font-mono text-sm leading-6">
         {diff.lines.map((line, index) => (
           <div
@@ -31,6 +34,29 @@ export function NoteDiffView({ diff }: NoteDiffViewProps) {
           </div>
         ))}
       </div>
+      {diff.summaryLines.length > 0 ? (
+        <>
+          <h4 className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-zinc-400">
+            Summary changes
+          </h4>
+          <div className="mt-2 space-y-1 font-mono text-sm leading-6">
+            {diff.summaryLines.map((line, index) => (
+              <div
+                key={`summary-${index}-${line.kind}`}
+                className={
+                  line.kind === "added"
+                    ? "rounded bg-emerald-50 px-3 text-emerald-800"
+                    : line.kind === "removed"
+                      ? "rounded bg-rose-50 px-3 text-rose-800 line-through"
+                      : "rounded px-3 text-zinc-700"
+                }
+              >
+                {line.value || "\u00a0"}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

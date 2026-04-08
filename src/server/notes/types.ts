@@ -80,6 +80,7 @@ export type NoteDiffLine = {
 export type NoteDiff = {
   changedFields: string[];
   lines: NoteDiffLine[];
+  summaryLines: NoteDiffLine[];
 };
 
 export type NoteSearchResult = NoteListItem & {

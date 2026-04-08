@@ -50,3 +50,4 @@
 - Replaced the raw `sharedUserIds` text input on note create/edit with an organization-member checkbox picker, wiring member lists into the new/edit pages so selective sharing is now discoverable and no longer depends on users typing UUIDs by hand.
 - Added a branded not-found page for the note detail route so deleted or inaccessible notes render a clear message with a back link instead of the generic Next.js 404.
 - Extracted the delete button on the note detail page into a client component using `useFormStatus` so the button shows a "Deleting…" disabled state while the server action is running.
+- Extended note detail and version diffs so non-authors can still read accepted AI summaries without seeing the authoring panel, and diff output now includes accepted-summary changes alongside body changes.

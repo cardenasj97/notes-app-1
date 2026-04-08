@@ -1,6 +1,8 @@
 import { diffLines } from "diff";
 
-import type { NoteDiff, NoteVersionSummary } from "./types";
+import type { AiSummary } from "@/lib/types";
+
+import type { NoteDiff, NoteDiffLine, NoteVersionSummary } from "./types";
 
 function compareStringSets(before: string[], after: string[]) {
   const normalizedBefore = [...before].sort();
@@ -49,20 +51,46 @@ export function getChangedFields(previous: SnapshotShape, current: SnapshotShape
   return changedFields;
 }
 
-export function buildNoteDiff(previousBody: string, currentBody: string): NoteDiff {
-  const lines = diffLines(previousBody, currentBody).flatMap((part) =>
+function summaryToText(summary: AiSummary | null): string {
+  if (!summary) return "";
+
+  return [
+    `Overview: ${summary.overview}`,
+    "",
+    ...summary.keyPoints.map((p) => `Key point: ${p}`),
+    "",
+    ...summary.actionItems.map((a) => `Action item: ${a}`),
+    "",
+    ...summary.openQuestions.map((q) => `Open question: ${q}`),
+  ].join("\n");
+}
+
+function diffText(previous: string, current: string): NoteDiffLine[] {
+  return diffLines(previous, current).flatMap((part) =>
     part.value
       .split("\n")
       .filter((line, index, array) => !(index === array.length - 1 && line === ""))
       .map((line) => ({
-        kind: (part.added ? "added" : part.removed ? "removed" : "unchanged") as NoteDiff["lines"][number]["kind"],
+        kind: (part.added ? "added" : part.removed ? "removed" : "unchanged") as NoteDiffLine["kind"],
         value: line,
       })),
   );
+}
 
+function buildSummaryDiff(previous: AiSummary | null, current: AiSummary | null): NoteDiffLine[] {
+  const prevText = summaryToText(previous);
+  const currText = summaryToText(current);
+
+  if (prevText === currText) return [];
+
+  return diffText(prevText, currText);
+}
+
+export function buildNoteDiff(previousBody: string, currentBody: string): NoteDiff {
   return {
     changedFields: [],
-    lines,
+    lines: diffText(previousBody, currentBody),
+    summaryLines: [],
   };
 }
 
@@ -72,6 +100,10 @@ export function compareVersionSnapshots(
 ): NoteDiff {
   return {
     changedFields: getChangedFields(previous, current),
-    lines: buildNoteDiff(previous.bodySnapshot, current.bodySnapshot).lines,
+    lines: diffText(previous.bodySnapshot, current.bodySnapshot),
+    summaryLines: buildSummaryDiff(
+      previous.acceptedSummarySnapshot,
+      current.acceptedSummarySnapshot,
+    ),
   };
 }

@@ -43,6 +43,7 @@
 - The current staged patch is a tiny browser-runtime fix: client-side Supabase env access now lives in a dedicated helper that uses direct `process.env.NEXT_PUBLIC_*` reads so Next.js can inline the values into the browser bundle.
 - The current staged patch is a small selective-sharing UX correction: note create/edit now receives org members and renders a checkbox picker instead of a raw UUID input, which makes the shipped sharing flow match the intended product behavior.
 - The current staged patch adds two small UX improvements to the note detail route: a branded not-found page (replacing the generic Next.js 404) and a `useFormStatus`-backed delete button that shows a disabled "Deleting…" state while the server action runs.
+- The current staged patch is a small note-history/detail correction: accepted AI summaries are now visible to read-only viewers on note detail, and version diffs include accepted-summary changes instead of only body text.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

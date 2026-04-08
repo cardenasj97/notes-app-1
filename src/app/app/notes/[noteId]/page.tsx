@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AiSummaryDisplay } from "@/components/notes/ai-summary-display";
 import { AiSummaryPanel } from "@/components/notes/ai-summary-panel";
 import { DeleteNoteButton } from "@/components/notes/delete-note-button";
 import { FilePanel } from "@/components/notes/file-panel";
@@ -97,11 +98,15 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
             </div>
           </section>
 
-          <AiSummaryPanel
-            noteId={note.id}
-            noteVersionId={latestVersion.id}
-            acceptedSummary={note.acceptedSummary}
-          />
+          {canEdit ? (
+            <AiSummaryPanel
+              noteId={note.id}
+              noteVersionId={latestVersion.id}
+              acceptedSummary={note.acceptedSummary}
+            />
+          ) : note.acceptedSummary ? (
+            <AiSummaryDisplay summary={note.acceptedSummary} />
+          ) : null}
         </>
       ) : null}
 
