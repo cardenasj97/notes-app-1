@@ -62,7 +62,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
             <div className="flex flex-wrap gap-3">
               <Link
                 href={`/app/notes/${note.id}/edit`}
-                className="whitespace-nowrap rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                className="whitespace-nowrap rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-50"
               >
                 Edit
               </Link>

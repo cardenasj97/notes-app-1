@@ -24,7 +24,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
           name="title"
           defaultValue={note?.title}
           placeholder="Launch Checklist"
-          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
           required
         />
       </div>
@@ -38,7 +38,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
           defaultValue={note?.body}
           rows={12}
           placeholder="Write the note in Markdown..."
-          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-zinc-900"
+          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 leading-6 outline-none transition focus:border-zinc-900"
           required
         />
       </div>
@@ -51,7 +51,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
             id="visibility"
             name="visibility"
             defaultValue={note?.visibility ?? "org"}
-            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
           >
             <option value="private">private</option>
             <option value="org">org</option>
@@ -67,7 +67,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
             name="tags"
             defaultValue={tags}
             placeholder="launch, internal"
-            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+            className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
           />
         </div>
       </div>
@@ -80,7 +80,7 @@ export function NoteForm({ organizationId, action, submitLabel, note }: NoteForm
           name="sharedUserIds"
           defaultValue={sharedUserIds}
           placeholder="11111111-1111-1111-1111-111111111111, ..."
-          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+          className="rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
         />
         <p className="text-xs text-zinc-500">
           Optional comma-separated user ids for selective sharing within the org.

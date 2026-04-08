@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NoteForm } from "@/components/notes/note-form";
@@ -19,6 +20,12 @@ export default async function NoteEditPage({ params }: NoteEditPageProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
+        <Link
+          href={`/app/notes/${noteId}`}
+          className="text-sm text-zinc-400 transition hover:text-zinc-200"
+        >
+          &larr; Back
+        </Link>
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-500">Edit</p>
         <h2 className="text-3xl font-semibold tracking-tight">{note.title}</h2>
       </div>

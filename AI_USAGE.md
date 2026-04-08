@@ -14,6 +14,7 @@
 - Main agent only: implemented cursor-based note pagination, the incremental `/api/notes` feed path, route-level loading states, and the follow-up cursor query fix locally.
 - Main agent only: replaced the nested post-commit docs automation with pre-commit/pre-push verification so deliverable docs must already be updated before shipping code.
 - Main agent only: handled the latest notes UX polish locally, including client-side search behavior inside the feed, new-note/detail loading states, shell layout cleanup, and small repo-hygiene config fixes.
+- Main agent only: handled the current follow-up locally too, because it is still a tightly coupled UI/runtime cleanup across note pages, global CSS behavior, file upload controls, and Docker packaging.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -21,6 +22,7 @@
 - The notes query fix also stayed local because the failure sat on a single critical path and the fastest safe move was to inspect the generated SQL, patch the query branch, and validate it immediately.
 - The pagination and docs-enforcement work also stayed local because both changes touched critical repo-wide paths: notes query ordering, API error classification, client feed behavior, hooks, wrapper scripts, and the required project docs.
 - The latest staged polish also stayed local because it sits across the same notes UX path and repo tooling path: feed state, app-shell composition, loading states, `.gitignore`, and Drizzle config.
+- This follow-up also stayed local because it is mostly polish and consistency work, where the integration cost of delegating exceeds the implementation cost.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
@@ -36,6 +38,7 @@
 - The pagination follow-up remained local because the first implementation changed both SSR and incremental client fetching, and the fastest safe path was to inspect the generated SQL, verify the second-page request, and patch the cursor branch directly.
 - The docs-consistency fix also stayed local because it changes the repo’s commit/push contract and should not be delegated while the enforcement behavior is still being established.
 - The latest UX/config cleanup also stayed local because it is small, tightly coupled, and easiest to validate in one pass rather than splitting between UI and tooling workers.
+- The same applied to this patch: local handling was faster and safer than parallel work because the changes are visual polish plus one Docker packaging adjustment.
 
 ## What I Still Do Not Trust Agents To Do
 - Cross-boundary fixes that span framework markers like `server-only`, CLI entry points, and environment bootstrapping without a local verification pass.

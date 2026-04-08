@@ -24,10 +24,12 @@
 - The initial notes pagination pass fixed overfetching but introduced a second-page cursor bug because the SQL predicate mixed JS `Date` objects into the Drizzle query path instead of using explicit typed SQL parameters.
 - The original docs automation design was too optimistic: it tried to generate required docs after commit, which is not reliable enough to guarantee those docs stay aligned with every pushed code change.
 - After pagination landed, the notes page still had split ownership of search UX between the server page shell and the client feed, which is a smaller but real consistency issue because paging and search now need to share the same state transitions.
+- After the search/pagination cleanup, the remaining issues were mostly UX consistency gaps: note edit lacked a clear return path, some note inputs and actions had weak visual emphasis, and note creation/detail loading states were not yet fully aligned.
 
 ## Current State
 - The current staged patch addresses three things together: notes list scalability via cursor pagination, the cursor query failure on `Load more`, and a stricter repo workflow that requires deliverable docs to be updated before commit/push.
 - The latest staged follow-up cleans up the notes UX around that pagination work by moving search responsibility into the feed, adding missing loading states, and tightening a couple of repo/runtime defaults.
+- The current staged patch is a narrower polish pass on top of that work: better note affordances, more consistent loading/interaction states, and a simpler Docker `pnpm` install path.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

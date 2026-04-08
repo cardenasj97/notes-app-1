@@ -34,3 +34,6 @@
 - Moved notes search interaction fully into the client feed so searching and clearing searches no longer requires a separate server-rendered search form above the list.
 - Added a loading state for `/app/notes/new`, polished note detail typography/loading, and moved the sign-out action to the bottom of the shell so the sidebar layout is more stable.
 - Tightened repo/runtime ergonomics by ignoring generated PNG artifacts consistently and making `drizzle.config.ts` read DB credentials directly from `DIRECT_DATABASE_URL` or `DATABASE_URL`.
+- Added a back link on the note edit screen, improved text contrast and button wrapping across the note detail/edit/file-upload surfaces, and moved more loading polish into the note creation flow.
+- Scoped the global base CSS reset into Tailwind `@layer base` and added a default pointer cursor for buttons so interactive controls behave more consistently.
+- Updated the Docker image setup to install `pnpm` directly instead of relying on `corepack enable`, which is safer for container builds that need deterministic package-manager availability.

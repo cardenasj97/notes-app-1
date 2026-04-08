@@ -127,7 +127,7 @@ export function FilePanel({ title, description, organizationId, noteId = null, f
           type="button"
           onClick={handleUpload}
           disabled={!selectedFile || isUploading}
-          className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="whitespace-nowrap rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isUploading ? "Uploading..." : "Upload file"}
         </button>

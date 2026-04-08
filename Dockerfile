@@ -2,7 +2,7 @@ FROM node:25-slim AS base
 WORKDIR /app
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+RUN npm install -g pnpm
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
@@ -17,7 +17,7 @@ FROM node:25-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-RUN corepack enable
+RUN npm install -g pnpm
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/package.json ./package.json
