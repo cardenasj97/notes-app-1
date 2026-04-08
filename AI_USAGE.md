@@ -22,6 +22,7 @@
 - Main agent only: handled the current auth/runtime follow-up locally because Railway health checks, app-shell error handling, and auth-page redirect behavior all sit on one deployment-sensitive path and were safer to reconcile in a single pass.
 - Main agent only: handled this notes-actions follow-up locally because form action state, note service inputs, layout caching, and paginated feed behavior all intersect on one user flow and were faster to reason about together than through delegation.
 - Main agent only: handled this deployment-fixture follow-up locally because the Docker build arg wiring and QA upload fixtures are tiny, coupled, and not worth splitting across agents.
+- Main agent only: handled this Railway builder follow-up locally because it is a one-file deployment alignment change and does not benefit from delegation.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -37,6 +38,7 @@
 - This deployment/auth follow-up also stayed local because it spans one narrow but coupled path: health-check readiness, workspace error boundaries, and the condition for redirecting authenticated users away from sign-in/up.
 - This notes-actions follow-up also stayed local because it couples server action return shapes, form rendering, pagination edge cases, and dynamic auth-shell rendering on the same request path.
 - This deployment-fixture patch also stayed local because it is just one builder-stage env fix plus static upload fixtures for QA.
+- This Railway follow-up also stayed local because it is just deployment config alignment: use the repo Dockerfile instead of a parallel Nixpacks path.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.
