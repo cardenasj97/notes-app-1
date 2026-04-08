@@ -1,0 +1,5 @@
+Q2 2026 Planning Notes
+- Launch timeline: May 15
+- Budget approved: $120k
+- Team leads: Alice, Bob, Carol
+- Key deliverables: API v2, mobile app beta, dashboard redesign

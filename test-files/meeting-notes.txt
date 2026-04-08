@@ -1,0 +1,14 @@
+Engineering Standup - April 7, 2026
+
+Attendees: Alice, Bob, Carol, Dave
+
+Updates:
+- Alice: Auth module shipped, starting on search indexing
+- Bob: File upload API ready for review
+- Carol: AI summary pipeline passing all tests
+- Dave: Docker config finalized, Railway deploy green
+
+Action items:
+- [ ] Alice to review Bob's upload PR by EOD
+- [ ] Carol to add rate limiting on summary endpoint
+- [ ] Dave to share Railway access with the team

@@ -38,6 +38,7 @@
 - The email confirmation app flow was removed. Signup no longer sends users through `/auth/callback` or `/auth/confirmed`, and immediate access now assumes Supabase email confirmation is disabled at the project level.
 - The current staged patch is a narrower deployment/auth hardening pass: Railway now checks a dedicated health endpoint, the `/app` shell fails closed with a controlled error screen for non-redirect exceptions, and sign-in/sign-up only redirect when a complete app auth context exists.
 - The current staged patch is a narrower note-authoring hardening pass: create/edit now return structured action-state errors instead of dropping the submission into a generic failure path, the `/app` layout is forced dynamic to reduce stale auth-shell state, and `Load more` defensively drops duplicate note ids during pagination appends.
+- The current staged patch is a narrower deployment/QA pass: the Docker builder now receives the required public Supabase env values at build time, and the repo includes small text fixtures for repeatable manual file-upload checks.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 

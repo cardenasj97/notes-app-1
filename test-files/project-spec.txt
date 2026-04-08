@@ -1,0 +1,17 @@
+Project: Multi-Tenant Notes Platform
+Version: 1.0
+Status: In Development
+
+Requirements:
+1. Authentication with role-based access control
+2. Organization-scoped notes with full CRUD
+3. Tag-based categorization and full-text search
+4. Note versioning with diff comparison
+5. File attachments per note and per organization
+6. AI-powered note summarization
+
+Tech Stack:
+- Next.js 16, TypeScript, Tailwind CSS
+- Supabase (Auth, Storage, Postgres)
+- Drizzle ORM
+- OpenAI API for summaries
