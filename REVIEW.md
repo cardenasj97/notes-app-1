@@ -6,7 +6,7 @@ The auth flow got the closest read — sign-up through note creation, AI summary
 
 Beyond auth and search, most shipped features received a close review pass: note CRUD, sharing, AI summaries (including stale-acceptance logic), file uploads, version diffs, and the deployment pipeline (Dockerfile, Railway health checks, env-loading). The local bootstrap path — Drizzle migrations, seed commands, storage bucket creation — was reviewed enough to uncover real bugs (server-only misuse, missing bucket bootstrap, env fragility).
 
-What I sampled rather than deeply verified: overall visual polish and layout, the broader UX of less-critical interaction paths.
+What I sampled rather than deeply verified: overall visual polish and layout, the broader UX of less-critical interaction paths, navigation, creation of members, organization switching.
 
 ## What I distrusted most
 
