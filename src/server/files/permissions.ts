@@ -68,12 +68,25 @@ export async function canWriteNote(userId: string, noteId: string) {
 
   const db = getDb();
   const rows = await db
-    .select({ authorId: notes.authorId })
+    .select({ authorId: notes.authorId, organizationId: notes.organizationId, visibility: notes.visibility })
     .from(notes)
     .where(and(eq(notes.id, noteId), isNull(notes.deletedAt)))
     .limit(1);
 
-  return rows[0]?.authorId === userId;
+  const note = rows[0];
+  if (!note) {
+    return false;
+  }
+
+  if (note.authorId === userId) {
+    return true;
+  }
+
+  if (note.visibility === "private") {
+    return false;
+  }
+
+  return isOrganizationMember(userId, note.organizationId);
 }
 
 export async function canAccessFile(userId: string, fileId: string) {

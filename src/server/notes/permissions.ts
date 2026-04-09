@@ -25,7 +25,11 @@ export function canReadNote(viewer: NotesViewer, note: NoteRecord) {
 }
 
 export function canWriteNote(viewer: NotesViewer, note: NoteRecord) {
-  return viewer.userId === note.authorId;
+  if (viewer.userId === note.authorId) {
+    return true;
+  }
+
+  return isOrganizationMember(viewer, note.organizationId) && note.visibility !== "private";
 }
 
 export function canManageSharing(viewer: NotesViewer, note: NoteRecord) {

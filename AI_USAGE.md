@@ -29,6 +29,8 @@ The notes page was also loading every note from the database without pagination,
 
 When agents started over-engineering things or spending too much time trying to solve something, I stepped in and gave them direct guidance to keep things moving.
 
+For this latest patch, I kept the work local because it changes a permission boundary across notes, files, AI summary acceptance, and the visible note detail controls. That kind of policy change is small in code size but easy to get wrong if it is split across workers.
+
 ## What I Don't Trust Agents To Do
 
 I don't trust agents to do the full QA of the application. They're not bulletproof. I prefer to add a human QA pass myself at the end of development to catch what they miss.

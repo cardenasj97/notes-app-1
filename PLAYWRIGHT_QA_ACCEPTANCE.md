@@ -115,8 +115,8 @@ Organization roles:
 
 Note visibility:
 - `private`: author only can read, search, edit, delete, upload note files, and mutate note state
-- `org`: all org members can read and search; only author can edit/delete/change note state
-- `shared`: author plus explicit shared recipients in the same org can read and search; only author can edit/delete/change sharing
+- `org`: all org members can read, search, edit, generate/accept AI summaries; only author can delete or manage sharing
+- `shared`: author plus explicit shared recipients in the same org can read and search; any org member can edit and generate/accept AI summaries; only author can delete or manage sharing
 
 Important expected rules:
 - Admins and owners must not bypass another user’s private note
@@ -124,7 +124,8 @@ Important expected rules:
 - Note files inherit note visibility
 - Org files are visible only to members of that org
 - AI generation must be permission-safe
-- AI acceptance is a note mutation and should be limited to users who are allowed to change note state
+- AI acceptance is a note mutation and should be limited to users who can edit the note (author or org member for non-private notes)
+- Only the author can delete a note, regardless of visibility
 
 ## Seeded High-Value Note Scenarios
 
@@ -375,30 +376,42 @@ Pass criteria:
 - Mina, Leo, and Priya cannot read it, even though they are in the same org
 - Admin does not bypass private visibility
 
-### 5B. Org-visible note access
+### 5B. Org-visible note access and collaborative editing
 
 Steps:
 1. As Mina in Northwind, open `Northwind Research search ranking 2`.
 2. Confirm Mina can read it.
 3. Sign in as Leo and Priya and confirm both can read it.
-4. Try to edit as a non-author and confirm editing is not allowed.
+4. As a non-author org member (e.g., Leo), confirm the `Edit` button is visible.
+5. Click `Edit`, change the body or tags, and save.
+6. Confirm the edit succeeds and creates a new version.
+7. Confirm the version history shows the non-author's display name as the editor.
+8. As the non-author, confirm the `Delete` button is **not** visible.
+9. Sign in as the original author (Mina) and confirm both `Edit` and `Delete` are visible.
 
 Pass criteria:
-- All org members can read
-- Non-author cannot mutate
+- All org members can read org-visible notes
+- Non-author org members can edit org-visible notes
+- Non-author org members cannot delete org-visible notes
+- Version history correctly attributes edits to the non-author editor
 
-### 5C. Shared note access
+### 5C. Shared note access and collaborative editing
 
 Steps:
 1. As Avery in Northwind, open `Northwind Research launch checklist 5`.
 2. Copy its URL.
 3. Sign in as Mina and confirm she can open the same URL.
 4. Sign in as Leo and Priya and confirm they cannot access it.
+5. As Mina (an org member who can read the shared note), confirm the `Edit` button is visible.
+6. Edit the note and save. Confirm the edit succeeds.
+7. As Mina, confirm the `Delete` button is **not** visible.
+8. Sign in as Avery (the author) and confirm both `Edit` and `Delete` are visible.
 
 Pass criteria:
 - Shared recipient can read
 - Non-recipient org members cannot read
-- Non-author shared recipient cannot edit or delete
+- Org members who can read a shared note can also edit it
+- Only the author can delete a shared note
 
 ### 5D. Cross-org direct URL denial
 
@@ -412,8 +425,10 @@ Pass criteria:
 
 Blockers for Suite 5:
 - Any unauthorized direct note access succeeds
-- Any non-author can edit/delete note state
+- Non-author org member can delete a note they don't own
+- Non-author cannot edit an org-visible or shared note they have access to
 - Shared notes leak to non-recipients
+- Private notes expose edit/delete to non-authors
 
 ## Suite 6: Versioning, State Tracking, and Diffs
 
@@ -685,13 +700,17 @@ Pass criteria:
 ### 10D. AI permission boundaries
 
 Steps:
-1. As a user who can read a shared note but does not own it, open that note.
-2. Try to use AI summary features.
-3. As a user who cannot read a note, try to reach its AI path through the note detail URL.
+1. As a non-author org member, open an org-visible note.
+2. Confirm the AI summary panel is visible (Generate summary button).
+3. Generate a summary and accept it. Confirm it succeeds and creates a new version attributed to the non-author.
+4. As a user who cannot read a note (e.g., private note of another author), try to reach its AI path through the note detail URL.
+5. Confirm AI actions are not exposed and AI endpoints reject the request.
 
 Expected safety rules:
 - Non-readable notes must never expose AI actions or usable AI endpoints
-- AI mutation flows must not let unauthorized users change note state
+- Org members who can edit a note can also generate and accept AI summaries
+- AI acceptance by a non-author correctly attributes the version to that user
+- Private notes restrict AI features to the author only
 
 Blockers:
 - Unauthorized user can mutate a note through AI acceptance
@@ -795,6 +814,8 @@ Treat these as release blockers:
 - any private note leak to non-author
 - any shared note leak to non-recipient
 - any unauthorized mutation, including AI acceptance or file access
+- non-author org member able to delete a note they don't own
+- non-author org member unable to edit an org-visible or shared note
 - search results containing unauthorized data
 - direct URL access bypassing permissions
 - version history or diff view broken

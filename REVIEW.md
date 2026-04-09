@@ -8,6 +8,8 @@ Beyond auth and search, most shipped features received a close review pass: note
 
 What I sampled rather than deeply verified: overall visual polish and layout, the broader UX of less-critical interaction paths, navigation, creation of members, organization switching.
 
+The latest patch moved part of the permission model itself: org members can now edit org-visible/shared notes and accept AI summaries on them, but only authors can delete notes or manage sharing. Because that crosses both policy and UI, it should be treated as a permission-regression-sensitive change, not just a small polish pass.
+
 ## What I distrusted most
 
 The search engine. It has to match across note titles and body text simultaneously, which makes ranking correctness non-trivial — a query that matches a title should probably outrank a body-only hit, but verifying that under real data volume is hard to do exhaustively. This area received the most direct manual testing as a result.

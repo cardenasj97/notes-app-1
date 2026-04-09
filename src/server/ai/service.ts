@@ -194,7 +194,7 @@ export async function acceptAiSummary(input: { draftId: string; selection: AiSum
   }
 
   if (!(await canWriteNote(auth.userId, draft.noteId))) {
-    throw new Error("Only the note author can accept a summary.");
+    throw new Error("You do not have permission to accept a summary for this note.");
   }
 
   const [currentVersion] = await db

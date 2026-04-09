@@ -726,7 +726,7 @@ export async function updateNote(noteId: string, data: NoteFormValues) {
   const existing = await getNoteDetail(noteId);
 
   if (!canWriteNote(viewer, existing)) {
-    throw accessError("Only the author can edit this note.");
+    throw accessError("You do not have permission to edit this note.");
   }
 
   const tags = normalizeNoteTags(parseList(data.tags));
@@ -842,7 +842,7 @@ export async function deleteNote(noteId: string) {
   const viewer = await getActiveNotesViewer();
   const note = await getNoteDetail(noteId);
 
-  if (!canWriteNote(viewer, note)) {
+  if (viewer.userId !== note.authorId) {
     throw accessError("Only the author can delete this note.");
   }
 

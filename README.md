@@ -48,8 +48,9 @@ All visibility levels require the reader to be a member of the note's organizati
 | Operation | Who is allowed |
 |---|---|
 | **Create** | Any member of the organization |
-| **Edit** | Only the author |
+| **Edit** | The author, or any org member if the note is org-visible or shared |
 | **Delete** | Only the author (soft delete — the note is marked as deleted, not permanently removed) |
+| **Generate/accept AI summary** | The author, or any org member if the note is org-visible or shared |
 | **Manage sharing** | Only the author |
 
 ### Sharing Rules
@@ -205,3 +206,7 @@ Test coverage includes:
 - AI summary selection logic
 - File access permissions
 - Database query regression guards
+
+### AI-Driven QA
+
+[`PLAYWRIGHT_QA_ACCEPTANCE.md`](./PLAYWRIGHT_QA_ACCEPTANCE.md) is a structured QA acceptance checklist designed to be executed by AI agents (e.g., Claude with Playwright MCP) for browser-driven end-to-end testing. It covers auth, permissions, CRUD, search, AI summaries, file access, and deployment smoke tests with detailed steps, pass criteria, and blocker definitions.

@@ -35,7 +35,9 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
       : null;
 
   const latestVersion = note.versions[note.versions.length - 1];
-  const canEdit = viewer.userId === note.authorId;
+  const isMember = viewer.organizationIds.includes(note.organizationId);
+  const canEdit = viewer.userId === note.authorId || (isMember && note.visibility !== "private");
+  const canDelete = viewer.userId === note.authorId;
   const files = await listNoteFiles(note.id, { userId: viewer.userId }).catch(() => []);
 
   return (
@@ -67,7 +69,7 @@ export default async function NoteDetailPage({ params, searchParams }: NoteDetai
               >
                 Edit
               </Link>
-              <DeleteNoteButton noteId={note.id} />
+              {canDelete ? <DeleteNoteButton noteId={note.id} /> : null}
             </div>
           ) : null}
         </div>
