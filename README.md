@@ -14,6 +14,65 @@ A multi-tenant markdown notes application with AI-powered summaries, role-based 
 - **File uploads** — attach files to notes with org-scoped storage and signed download URLs
 - **Audit logging** — track actions across the platform for compliance and transparency
 
+## Business Logic & Permissions
+
+### Organization Roles
+
+Every user belongs to an organization with one of three roles. Higher roles inherit all permissions of lower roles.
+
+| Capability | Owner | Admin | Member |
+|---|:---:|:---:|:---:|
+| View org notes (org-visible) | Yes | Yes | Yes |
+| Create notes | Yes | Yes | Yes |
+| Upload files | Yes | Yes | Yes |
+| Add members to the organization | Yes | Yes | No |
+| Assign any role when adding members | Yes | Yes | No |
+| Full organization management | Yes | No | No |
+
+Any authenticated user can create a new organization. The creator automatically becomes the **owner**.
+
+### Note Visibility
+
+Each note has one of three visibility levels:
+
+| Visibility | Who can read |
+|---|---|
+| **Private** | Only the author |
+| **Org** | Any member of the organization |
+| **Shared** | The author and explicitly shared users |
+
+All visibility levels require the reader to be a member of the note's organization — there is no cross-organization access.
+
+### Note Operations
+
+| Operation | Who is allowed |
+|---|---|
+| **Create** | Any member of the organization |
+| **Edit** | Only the author |
+| **Delete** | Only the author (soft delete — the note is marked as deleted, not permanently removed) |
+| **Manage sharing** | Only the author |
+
+### Sharing Rules
+
+- Only the note's author can add or remove shared users.
+- Shared users must be members of the same organization as the note. Non-members are silently filtered out.
+- The author is automatically excluded from the shared users list (they always have access).
+- When the author shares a note with users, the visibility is set to **shared**.
+- When visibility is changed away from **shared** (e.g., to **org** or **private**), all shared users are cleared.
+- Shared users are only tracked when visibility is **shared**.
+
+### Member Management
+
+- Adding members requires the **admin** or **owner** role.
+- When adding a member, the inviter can assign any role (owner, admin, or member).
+- If the invited user does not yet have a profile, one is created automatically from their email and display name.
+- If the user is already a member, their role is updated to the newly assigned role.
+
+### File Access
+
+- **Upload:** Any organization member can upload files to their organization.
+- **Download:** Requires organization membership. If the file is attached to a note, the user must also have read access to that note (based on visibility rules above). Files not attached to a note are accessible to any organization member.
+
 ## Tech Stack
 
 | Layer | Technology |
