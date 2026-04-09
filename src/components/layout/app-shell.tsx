@@ -66,7 +66,7 @@ export function AppShell({
                   <p className="text-sm text-slate-400">Role: {activeOrg.role}</p>
                 </div>
                 <MemberList members={context.members} />
-                <AddMemberForm organization={activeOrg} />
+                {activeOrg.role !== "member" && <AddMemberForm organization={activeOrg} />}
               </section>
             ) : (
               <section className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-4 text-sm text-slate-300">
