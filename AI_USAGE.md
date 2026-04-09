@@ -28,6 +28,7 @@
 - Main agent only: handled the not-found page and delete loading state follow-up locally because both changes are small, self-contained, and concern the same note detail route.
 - Main agent only: handled this AI-summary diff follow-up locally because it spans the same note detail route, one new display component, and the server-side diff builder, which is a narrow integration path.
 - Main agent only: handled this QA-spec follow-up locally because it is documentation-only work tied directly to the latest shipped UI behaviors and review expectations.
+- Main agent only: handled this add-member visibility follow-up locally because it is a single-line render guard in one file and does not benefit from delegation.
 
 ## What Ran In Parallel
 - The original product build used three parallel implementation workers plus later review/test follow-ups.
@@ -49,6 +50,7 @@
 - This not-found/delete-loading follow-up also stayed local because it is two small additions to one route — a static server component and a tiny client wrapper — that do not benefit from delegation.
 - This AI-summary diff follow-up also stayed local because it is one contained detail-page improvement and the server/client coupling is tighter than the implementation volume.
 - This QA-spec follow-up also stayed local because it is pure acceptance-document maintenance and should track the shipped product behavior exactly.
+- This add-member visibility follow-up also stayed local because it is a one-line change to a single component and the role value is already available in scope.
 
 ## Where Agents Were Wrong
 - Earlier implementation slices drifted at the `/app` shell boundary, the notes data path, and API auth boundary, which led to the issues already captured in `BUGS.md`.

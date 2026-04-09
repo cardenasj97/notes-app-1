@@ -45,6 +45,7 @@
 - The current staged patch adds two small UX improvements to the note detail route: a branded not-found page (replacing the generic Next.js 404) and a `useFormStatus`-backed delete button that shows a disabled "Deleting…" state while the server action runs.
 - The current staged patch is a small note-history/detail correction: accepted AI summaries are now visible to read-only viewers on note detail, and version diffs include accepted-summary changes instead of only body text.
 - The current staged patch is a QA-contract update: the Playwright acceptance guide now explicitly covers the newer note detail, sharing, delete-state, and summary-diff behaviors so manual/browser review matches the shipped app surface.
+- The current staged patch is a single-line UX/permission alignment fix: the add-member form in the app shell is now hidden for `member`-role users so the visible sidebar matches the server-side `requireOrgAdmin` guard.
 - Highest residual product risk remains pagination correctness under real seeded DB volume for both browse and search ranking paths.
 - Highest residual repo-process risk is manual bypass of the wrapper workflow, but the new pre-push hook materially reduces that gap.
 
